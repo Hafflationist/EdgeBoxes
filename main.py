@@ -1,5 +1,15 @@
+import cv2
+
+import edgebox as eb
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print('Hallo Welt')
+    test_img = cv2.imread("assets/testImage.jpg")
+    cv2.imshow("hugo", test_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
+    test_edges = eb.detect_edges(test_img)
+    cv2.imshow("hugo2", test_edges)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
