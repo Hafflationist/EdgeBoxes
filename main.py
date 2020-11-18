@@ -9,7 +9,7 @@ if __name__ == '__main__':
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    test_edges = eb.detect_edges(test_img)
-    cv2.imshow("hugo2", test_edges)
+    test_edges_nms, orientation_map = eb.detect_edges(test_img)
+    cv2.imshow("nms", test_edges_nms)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
