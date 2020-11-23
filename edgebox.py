@@ -63,7 +63,8 @@ def group_edges(edges_nms, orientation_map):
             for (r, p) in get_testable_coords(edges_nms, row_idx, px_idx):
                 if edges_nms[r, p] != 1:
                     continue
-                current_diff = abs(px_orientation - orientation_map[r, p])  # TODO: calculate better distance
+                current_diff = abs(px_orientation - orientation_map[r, p])
+                current_diff = min(3.14159265358979 - current_diff, current_diff)  # difference in a circle
                 if groups[edges_with_grouping[row_idx][px_idx][1]] < half_pi:
                     new_group_id_candidate = edges_with_grouping[r][p][1]
                     # update group information...
