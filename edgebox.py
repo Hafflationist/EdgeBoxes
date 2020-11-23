@@ -42,29 +42,33 @@ def group_edges(edges_nms, orientation_map):
                              (r_idx - 1, p_idx),
                              (r_idx - 1, p_idx + 1),
                              (r_idx, p_idx - 1)]
-        row_idx_max = len(matrix)
         px_idx_max = len(matrix[0])
-        result = list(filter(lambda x: 0 <= x[0] < row_idx_max and 0 <= x[1] < px_idx_max, all_possibilities))
+        result = list(filter(lambda x: 0 <= x[0] and 0 <= x[1] < px_idx_max, all_possibilities))
         return result
 
     new_group_id: int = 0
     groups: list = []
     edges_with_grouping = np.array([[[0, -1] for _ in edges_nms[0]] for _ in edges_nms])
+    half_pi = 3.14159265358979 / 2.0
 
     for row_idx in range(len(edges_nms)):
         for px_idx in range(len(edges_nms[0])):
+            if edges_nms[row_idx][px_idx] != 1:
+                continue
+
             new_group_id_candidate = new_group_id
             # check N8 neighborhood
             current_diff = 0.0
             px_orientation = orientation_map[row_idx, px_idx]
             for (r, p) in get_testable_coords(edges_nms, row_idx, px_idx):
-                if edges_nms[r, p] >= 0.1:
-                    current_diff = abs(px_orientation - orientation_map[r, p])  # TODO: calculate better distance
-                    if groups[edges_with_grouping[row_idx][px_idx][1]] < (3.14159265358979 / 2.0):
-                        new_group_id_candidate = edges_with_grouping[r][p][1]
-                        # update group information...
-                        groups[new_group_id_candidate] += current_diff
-                        break
+                if edges_nms[r, p] != 1:
+                    continue
+                current_diff = abs(px_orientation - orientation_map[r, p])  # TODO: calculate better distance
+                if groups[edges_with_grouping[row_idx][px_idx][1]] < half_pi:
+                    new_group_id_candidate = edges_with_grouping[r][p][1]
+                    # update group information...
+                    groups[new_group_id_candidate] += current_diff
+                    break
             else:
                 # new group created:
                 groups.append(current_diff)
@@ -72,6 +76,7 @@ def group_edges(edges_nms, orientation_map):
 
             edges_with_grouping[row_idx][px_idx] = [edges_nms[row_idx, px_idx], new_group_id_candidate]
     print("#groups: " + str(new_group_id))
+    print("#edgepxs: " + str(len(np.where(edges_nms == 1)[0])))
     return edges_with_grouping
 
 
