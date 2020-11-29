@@ -14,13 +14,19 @@ if __name__ == '__main__':
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
     test_edges_nms_colored = eb.color_edges(test_edges_nms, orientation_map)
-    # cv2.imshow("nms (colored)", test_edges_nms_colored)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.imshow("nms (colored)", test_edges_nms_colored)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
     b = datetime.datetime.now()
     test_edges_nms_grouped, groups_members = eb.group_edges(test_edges_nms, orientation_map)
     a = datetime.datetime.now()
     print("group_edges:\t" + str(a - b))
+
+    affinities = eb.calculate_affinities(groups_members, orientation_map)
+    cv2.imshow("affinities", affinities)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     b = datetime.datetime.now()
     test_edges_nms_grouped_colored = eb.color_grouped_edges(test_edges_nms_grouped)
