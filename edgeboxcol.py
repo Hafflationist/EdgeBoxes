@@ -55,6 +55,27 @@ def add_visual_box(img_orig, left: int, top: int, right: int, bottom: int):
     return img
 
 
+def color_weights(edges_with_grouping, groups_members, edges_nms, w):
+    def get_summed_magnitude(matrix, members):
+        mag_sum = 0.0
+        for (row_idx, px_idx) in members:
+            mag_sum += edges_nms[row_idx, px_idx]
+        return mag_sum
+
+    def calculate_color_from_group(edge_magnitude: float, group_id: int):
+        weight = w[group_id]
+        if edge_magnitude < 0.1:
+            return [0.0, 0.0, 0.0, 0.0]
+        return [0.0, weight * sum_of_magnitudes[group_id], (1.0 - weight) * sum_of_magnitudes[group_id], 1.0]
+
+    sum_of_magnitudes: list = [get_summed_magnitude(edges_nms, members) for members in groups_members]
+    sum_of_magnitudes = sum_of_magnitudes / np.max(sum_of_magnitudes)
+    edges_nms_colored = [[calculate_color_from_group(px[0], px[1])
+                          for px in row]
+                         for row in edges_with_grouping]
+    return np.array(edges_nms_colored)
+
+
 def generate_test():
     def calc_angle(px, row):
         divisor = (px - 250.0)
@@ -68,3 +89,15 @@ def generate_test():
     return np.array([[calc_angle(row, px)
                       for row in range(501)]
                      for px in range(501)])
+
+
+def generate_test_2():
+    def calc_color(row, px):
+        if row < 125:
+            rgb = colorsys.hsv_to_rgb(px / 500.0, 1.0, 1.0)
+            return [rgb[0], rgb[1], rgb[2], 1.0]
+        else:
+            return [px / 500.0, px / 500.0, px / 500.0, 1.0]
+    return np.array([[calc_color(row, px)
+                      for px in range(500)]
+                     for row in range(250)])
