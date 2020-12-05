@@ -4,9 +4,12 @@ import json
 
 import edgebox as eb
 import edgeboxcol as ebc
+import multiscale_saliency as ms
 import numpy as np
 from multiprocessing import Pool
 from attentionmask.mask import decode
+
+from skimage.transform import resize
 
 
 def do_things_with_visualizations(img, left: int, top: int, right: int, bottom: int):
@@ -53,63 +56,56 @@ def do_things_with_visualizations(img, left: int, top: int, right: int, bottom: 
     print(obj)
 
 
-def segmentation_2_borders(seg):
+def segmentation_2_borders_and_mask(seg):
     mask = decode(seg)
     coords = np.where(mask == 1)
-    print(coords)
     row_coords = coords[0]
     col_coords = coords[1]
-    return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords)
+    return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), (mask == 1)
+
+
+def process_single_proposal(img, proposal):
+    left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
+    objectness = eb.do_all(img, left, top, right, bottom)
+    return objectness
 
 
 def parallel_calc(mask_path, image_path):
-    def process_single_proposal(proposal):
-        left, top, right, bottom = segmentation_2_borders(proposal['segmentation'])
-        objectness = eb.do_all(img, left, top, right, bottom)
-        return objectness
-
     img = cv2.imread(image_path)
     with open(mask_path) as file:
         data = json.load(file)
+    tupled_data = list(map(lambda x: (img, x), data))
     with Pool(6) as pool:
-        pool.map(process_single_proposal, data)
+        return pool.starmap(process_single_proposal, tupled_data)
 
 
 if __name__ == '__main__':
-    with open('assets/attentionMask-8-128.json') as f:
-        d = json.load(f)
-    print(segmentation_2_borders(d[0]['segmentation']))
-    exit()
-    # group_id = 0
-    # groups_not_in_box = [2,3]
-    # affinities = np.array([
-    #     [1.0, 1.0, 1.0, 0.0, 0.0],
-    #     [1.0, 1.0, 1.0, 0.0, 0.0],
-    #     [1.0, 1.0, 1.0, 1.0, 1.0],
-    #     [0.0, 0.0, 1.0, 1.0, 1.0],
-    #     [0.0, 0.0, 1.0, 1.0, 1.0]
-    # ])
+    # result = parallel_calc('assets/attentionMask-8-128.json', 'assets/testImage_brutalismus.jpg')
     #
-    # def generate_paths(group_len: int, length: int):
-    #     paths: list = [[group_id]]
-    #     for _ in range(length - 1):
-    #         paths = [p + [new_group_id]
-    #                  for p in paths
-    #                  for new_group_id in range(group_len)
-    #                  if new_group_id != p[-1]
-    #                  and affinities[new_group_id, p[-1]] > 0.0
-    #                  and not(new_group_id in p)]
-    #     return list(filter(lambda p: p[-1] in groups_not_in_box, paths))
+    # for r in result:
+    #     print(r)
     #
-    # print(generate_paths(5, 1))
-    # print(generate_paths(5, 2))
-    # print(generate_paths(5, 3))
-    # print(generate_paths(5, 4))
-    # print(generate_paths(5, 5))
+    # print("max:\t" + str(np.max(result)))
+    # print("min:\t" + str(np.min(result)))
+    #
+    # with open('assets/attentionMask-8-128.json') as f:
+    #     d = json.load(f)
+    # print(segmentation_2_borders(d[0]['segmentation']))
     # exit()
 
-    test_img = cv2.imread("assets/testImage.jpg")
-    # test_img = cv2.imread("assets/testImage2.jpg")
+    test_img = cv2.imread("assets/testImage_giraffe.jpg")
+    original_shape = test_img.shape
+    saliency = ms.calculate_multiscale_saliency(test_img, 1)
+    cv2.imshow("saliency1", resize(saliency, original_shape))
+    saliency = ms.calculate_multiscale_saliency(test_img, 2)
+    cv2.imshow("saliency2", resize(saliency, original_shape))
+    saliency = ms.calculate_multiscale_saliency(test_img, 3)
+    cv2.imshow("saliency3", resize(saliency, original_shape))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    exit()
+
+    # test_img = cv2.imread("assets/testImage_schreibtisch.jpg")
     # do_things_with_visualizations(test_img, 0, 40, 550, 150)
     before = datetime.datetime.now()
     input = [(test_img, 0, 40, 550, 150), (test_img, 0, 40, 550, 266)]
@@ -118,7 +114,7 @@ if __name__ == '__main__':
         return eb.do_all(x[0], x[1], x[2], x[3], x[4])
 
     with Pool(2) as p:
-        result = p.map(hugo , input)
+        result = p.map(hugo, input)
     # eb.do_all(test_img, 0, 40, 550, 150)    # halbes Gebäude
     # eb.do_all(test_img, 0, 40, 550, 266)    # fast ganzes Gebäude
     print(result)
