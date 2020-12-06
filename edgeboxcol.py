@@ -3,25 +3,27 @@ import colorsys
 import random
 import math
 
+from numpy.core.multiarray import ndarray
 
-def color_edges(edges_nms, orientation_map):
+
+def color_edges(edges_nms: ndarray, orientation_map: ndarray):
     def calculate_pixel(row_idx, px_idx):
-        if edges_nms[row_idx, px_idx] < 0.1:
+        if edges_nms[row_idx, px_idx] < 0.2:
             return [0.0, 0.0, 0.0, 0.0]
         o = orientation_map[row_idx, px_idx]
         rgb = colorsys.hsv_to_rgb(o / math.pi, 1.0, 1.0)
-        # return [rgb[0], rgb[1], rgb[2], 1.0]
-        return [edges_nms[row_idx, px_idx] * rgb[0], edges_nms[row_idx, px_idx] * rgb[1],
-                edges_nms[row_idx, px_idx] * rgb[2], 1.0]
+        intensity = edges_nms[row_idx, px_idx]
+        return [intensity * rgb[0], intensity * rgb[1],
+                intensity * rgb[2], 1.0]
 
     edges_nms_colored = [[calculate_pixel(row_idx, px_idx)
                           for px_idx in range(len(edges_nms[0]))]
                          for row_idx in range(len(edges_nms))]
-    return np.array(edges_nms_colored)
+    return np.array(edges_nms_colored) / np.max(edges_nms_colored)
 
 
 # returns RGB-image
-def color_grouped_edges(edges_with_grouping, groups_members, edges_nms):
+def color_grouped_edges(edges_with_grouping: ndarray, groups_members: ndarray, edges_nms: ndarray):
     def get_summed_magnitude(matrix, members):
         mag_sum = 0.0
         for (row_idx, px_idx) in members:
@@ -45,7 +47,7 @@ def color_grouped_edges(edges_with_grouping, groups_members, edges_nms):
     return np.array(edges_nms_colored)
 
 
-def add_visual_box(img_orig, left: int, top: int, right: int, bottom: int):
+def add_visual_box(img_orig: ndarray, left: int, top: int, right: int, bottom: int):
     img = img_orig.copy()
     max_value = np.max(img)
     img[top:bottom + 2, left:left + 3, :] = max_value           # left
@@ -55,7 +57,7 @@ def add_visual_box(img_orig, left: int, top: int, right: int, bottom: int):
     return img
 
 
-def color_weights(edges_with_grouping, groups_members, edges_nms, w):
+def color_weights(edges_with_grouping: ndarray, groups_members: ndarray, edges_nms: ndarray, w: ndarray):
     def get_summed_magnitude(matrix, members):
         mag_sum = 0.0
         for (row_idx, px_idx) in members:

@@ -3,6 +3,7 @@ import numpy as np
 import math
 
 from functools import reduce
+from numpy.core.multiarray import ndarray
 
 
 def detect_edges(img):
@@ -16,7 +17,7 @@ def detect_edges(img):
 
 
 # return list<int*int>
-def get_n8(matrix, r_idx: int, p_idx: int):
+def get_n8(matrix: ndarray, r_idx: int, p_idx: int):
     all_possibilities = [(r_idx - 1, p_idx - 1),
                          (r_idx - 1, p_idx),
                          (r_idx - 1, p_idx + 1),
@@ -37,15 +38,15 @@ def get_n8(matrix, r_idx: int, p_idx: int):
 # 2. group id
 # returns list<list<[int, int]>>     (Matrix of [edge, group id])
 #       * list<list<int*int>>        (List of all group members(coords))
-def group_edges(edges_nms_orig, orientation_map):
+def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
 
-    def get_new_todo(matrix):
+    def get_new_todo(matrix: ndarray):
         todo = [coord for coord in coords_of_edges if matrix[coord[0], coord[1], 1] == -1]
         if len(todo) == 0:
             return -1, -1
         return todo[0]
 
-    def get_next_todo(matrix, curr_r_idx: int, curr_p_idx: int):
+    def get_next_todo(matrix: ndarray, curr_r_idx: int, curr_p_idx: int):
         root_coord = groups_members[edges_with_grouping[curr_r_idx][curr_p_idx][1]][0]
         for (ro, pi) in sorted(get_n8(matrix, curr_r_idx, curr_p_idx),
                                key=lambda coord: ((coord[0] - root_coord[0])**2 + (coord[1] - root_coord[1])**2)):
@@ -107,7 +108,7 @@ def group_edges(edges_nms_orig, orientation_map):
 
 
 # returns list<list<float>> (Adjazenzmatrix)
-def calculate_affinities(groups_members, orientation_map):
+def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
     def mean_of_coords(idx: int) -> (float, float):
         rows = [coord[0] for coord in groups_members[idx]]
         columns = [coord[1] for coord in groups_members[idx]]
@@ -116,7 +117,6 @@ def calculate_affinities(groups_members, orientation_map):
     def mean_of_orientations(idx: int) -> float:
         orientations = [orientation_map[(coord[0], coord[1])] for coord in groups_members[idx]]
         return sum(orientations) / len(orientations)
-
 
     groups_mean_position = [mean_of_coords(idx) for idx in range(len(groups_members))]
     groups_mean_orientation = [mean_of_orientations(idx) for idx in range(len(groups_members))]
@@ -131,7 +131,7 @@ def calculate_affinities(groups_members, orientation_map):
             coord_diff[1] = 0.0001
         return (np.arctan(coord_diff[0]/coord_diff[1]) + (math.pi / 2.0)) / math.pi
 
-    def calc_distance(group_id_1: int, group_id_2: int):
+    def calc_distance(group_id_1: int, group_id_2: int) -> float:
         distance = 10
         if(groups_min_row_idx[group_id_1] - groups_max_row_idx[group_id_2] > distance
                 or groups_min_row_idx[group_id_2] - groups_max_row_idx[group_id_1] > distance
@@ -157,7 +157,7 @@ def calculate_affinities(groups_members, orientation_map):
         theta_12 = calc_angle_between_points((pos_1[0], pos_1[1]), (pos_2[0], pos_2[1]))
         theta_1 = groups_mean_orientation[group_id_1]
         theta_2 = groups_mean_orientation[group_id_2]
-        aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25 #** 2.0 TODO Eigentlich sollte hier quadriert werden
+        aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25  #** 2.0 TODO Eigentlich sollte hier quadriert werden
         if aff <= 0.05:
             return 0.0
         return aff
@@ -179,17 +179,20 @@ def calculate_affinities(groups_members, orientation_map):
     number_of_groups = len(groups_members)
     affinities = np.zeros(shape=(number_of_groups, number_of_groups))
     for group_id_row in range(number_of_groups):
-        for group_id_column in range(number_of_groups): # range(group_id_row, number_of_groups):
+        for group_id_column in range(number_of_groups):  # range(group_id_row, number_of_groups):
             affinities[group_id_row, group_id_column] = calculate_affinity(group_id_row, group_id_column)
     return affinities
 
 
-def get_weights(edges_with_grouping_orig, groups_members, affinities, left: int, top: int, right: int, bottom: int):
+def get_weights(edges_with_grouping_orig: ndarray,
+                groups_members: ndarray,
+                affinities: ndarray,
+                left: int, top: int, right: int, bottom: int) -> ndarray:
     edges_with_grouping = edges_with_grouping_orig.copy()
     edges_with_grouping[top:bottom, left:right, 1] = -1
     groups_not_in_box = np.unique(edges_with_grouping[:, :, 1])
 
-    def calculate_weight(affinities, group_id: int):
+    def calculate_weight(affs: ndarray, group_id: int):
         def generate_paths(group_len: int, length: int):
             paths: list = [[group_id]]
             for _ in range(length):
@@ -197,7 +200,7 @@ def get_weights(edges_with_grouping_orig, groups_members, affinities, left: int,
                          for p in paths
                          for new_group_id in range(group_len)
                          if new_group_id != p[-1]
-                         and affinities[new_group_id, p[-1]] > 0.0
+                         and affs[new_group_id, p[-1]] > 0.0
                          and not (new_group_id in p)]
             return list(filter(lambda p: p[-1] in groups_not_in_box, paths))
 
@@ -219,33 +222,29 @@ def get_weights(edges_with_grouping_orig, groups_members, affinities, left: int,
     return w
 
 
-def get_objectness(edges_nms, edges_with_grouping, groups_members, affinities, left: int, top: int, right: int, bottom: int):
-    def sum_magnitudes(matrix, members):
-        mag_sum = 0.0
-        for (row_idx, px_idx) in members:
-            mag_sum += matrix[row_idx, px_idx]
-        return mag_sum
+def get_objectness(edges_nms: ndarray,
+                   edges_with_grouping: ndarray,
+                   groups_members: ndarray,
+                   affinities: ndarray,
+                   left: int, top: int, right: int, bottom: int) -> (float, float):
+    def sum_magnitudes(matrix: ndarray, members: ndarray):
+        return np.sum(list(map(lambda coord: matrix[coord[0], coord[1]], members)))
 
     groups_in_box = np.unique(edges_with_grouping[top:bottom, left:right, 1])
     sum_of_magnitudes: list = [sum_magnitudes(edges_nms, members) for members in groups_members]
 
     w = get_weights(edges_with_grouping, groups_members, affinities, left, top, right, bottom)
-    h = 0.0
-    for group_id in groups_in_box:
-        h += w[group_id] * sum_of_magnitudes[group_id]
+    h = np.sum(list(map(lambda group_id: w[group_id] * sum_of_magnitudes[group_id], groups_in_box)))
     h /= 2 * (((right - left) + (bottom - top)) ** 1.5)
 
-    sub = 0.0
-    for group_id in groups_in_box:
-        if w[group_id] < 1.0:
-            sub += sum_of_magnitudes[group_id] * (1.0 - w[group_id])
+    relevant_for_sub = filter(lambda group_id: w[group_id] < 1.0, groups_in_box)
+    sub = np.sum(list(map(lambda group_id: sum_of_magnitudes[group_id] * (1.0 - w[group_id]), relevant_for_sub)))
     sub /= 2 * (((right - left) + (bottom - top)) ** 1.5)
     h_in = h - sub
     return h, h_in
-    # TODO implement algorithms
 
 
-def do_all(img, left, top, right, bottom):
+def do_all(img: ndarray, left: int, top: int, right: int, bottom: int) -> (float, float):
     edges_nms, orientation_map = detect_edges(img)
     edges_nms_grouped, groups_members = group_edges(edges_nms, orientation_map)
     affinities = calculate_affinities(groups_members, orientation_map)
