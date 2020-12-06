@@ -5,6 +5,7 @@ import json
 import edgebox as eb
 import edgeboxcol as ebc
 import multiscale_saliency as ms
+import color_contrast as cc
 import numpy as np
 from numpy.core.multiarray import ndarray
 from multiprocessing import Pool
@@ -83,7 +84,12 @@ def parallel_calc(mask_path, image_path):
 if __name__ == '__main__':
 
     test_img = cv2.imread("assets/testImage_brutalismus.jpg")
-    # cc.get_objectness(test_img, 0, 0, 100, 100)
+    cc.get_objectness(test_img, 0, 0, 100, 100)
+    halb = cc.get_objectness(test_img, 0, 40, 550, 150)    # halbes Gebäude
+    ganz = cc.get_objectness(test_img, 0, 40, 550, 266)    # fast ganzes Gebäude
+    print(halb)
+    print(ganz)
+
     # exit()
     #
     # test_img = cv2.imread("assets/testImage_giraffe.jpg")
