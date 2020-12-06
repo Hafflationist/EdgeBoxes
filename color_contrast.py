@@ -21,6 +21,7 @@ def chi_square_distance(hist_1: ndarray, hist_2: ndarray):
     return np.sum(list(map(addend, zip(hist_1, hist_2))))
 
 
+# TODO: use mask instead of window (how could SURR be calculated?)
 def get_objectness(img: ndarray, left: int, top: int, right: int, bottom: int, theta_cc: float = 2.0) -> float:
     img_lab = color.rgb2lab(img)
 

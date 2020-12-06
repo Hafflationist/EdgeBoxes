@@ -40,7 +40,7 @@ def calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
 
 
 def get_objectness(img: ndarray, mask: ndarray, theta_ms: float = 0.0, learned: bool = False) -> float:
-    saliency = calculate_multiscale_saliency(img, 1)
+    saliency = calculate_multiscale_saliency(img, 1)  # calculate integral image to boost computation across multiple proposals
     if not learned:
         theta_ms = np.max(saliency) * (2.0 / 3.0)
     mask_coords = np.transpose(np.where(mask))
