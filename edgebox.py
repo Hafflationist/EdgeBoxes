@@ -1,9 +1,13 @@
+from typing import List
+
 import cv2
 import numpy as np
 import math
 
 from functools import reduce
 from numpy.core.multiarray import ndarray
+
+from utils import get_n8
 
 
 def detect_edges(img):
@@ -14,23 +18,6 @@ def detect_edges(img):
     orientation_map = pDollar.computeOrientation(edges)
     edges_nms = pDollar.edgesNms(edges, orientation_map)
     return edges_nms, orientation_map
-
-
-# return list<int*int>
-def get_n8(matrix: ndarray, r_idx: int, p_idx: int):
-    all_possibilities = [(r_idx - 1, p_idx - 1),
-                         (r_idx - 1, p_idx),
-                         (r_idx - 1, p_idx + 1),
-                         (r_idx, p_idx - 1),
-                         (r_idx, p_idx),
-                         (r_idx, p_idx + 1),
-                         (r_idx + 1, p_idx - 1),
-                         (r_idx + 1, p_idx),
-                         (r_idx + 1, p_idx + 1)]
-    px_idx_max = len(matrix[0])
-    row_idx_max = len(matrix)
-    result = list(filter(lambda x: 0 <= x[0] < row_idx_max and 0 <= x[1] < px_idx_max, all_possibilities))
-    return result
 
 
 # each pixel consists of:
@@ -187,7 +174,7 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
 def get_weights(edges_with_grouping_orig: ndarray,
                 groups_members: ndarray,
                 affinities: ndarray,
-                left: int, top: int, right: int, bottom: int) -> ndarray:
+                left: int, top: int, right: int, bottom: int) -> List[float]:
     edges_with_grouping = edges_with_grouping_orig.copy()
     edges_with_grouping[top:bottom, left:right, 1] = -1
     groups_not_in_box = np.unique(edges_with_grouping[:, :, 1])
