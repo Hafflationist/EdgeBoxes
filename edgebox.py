@@ -7,7 +7,7 @@ import math
 from functools import reduce
 from numpy.core.multiarray import ndarray
 
-from utils import get_n8
+from utils.utils import get_n8
 
 
 def detect_edges(img):

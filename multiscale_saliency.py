@@ -6,7 +6,7 @@ from skimage.filters import gaussian
 from scipy.ndimage import convolve
 
 
-def calculate_one_channel(img_mono: ndarray) -> ndarray:
+def __calculate_one_channel(img_mono: ndarray) -> ndarray:
     complex_img = numpy.fft.fft2(img_mono)
     img_phase = np.angle(complex_img)
     img_freq = np.abs(complex_img)
@@ -24,7 +24,7 @@ def calculate_one_channel(img_mono: ndarray) -> ndarray:
     return result_smooth
 
 
-def calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
+def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
     # Selbst wenn man keine Größenveränderung braucht, muss hier resize stehen
     # Grund: unbekannt
     # Konsequenz beim Entfernen: IFFT funktioniert nicht wie erwartet
@@ -32,15 +32,15 @@ def calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
     img_red = np.array([[px[0] for px in row] for row in img])
     img_green = np.array([[px[1] for px in row] for row in img])
     img_blue = np.array([[px[2] for px in row] for row in img])
-    saliency_red = calculate_one_channel(img_red)
-    saliency_green = calculate_one_channel(img_green)
-    saliency_blue = calculate_one_channel(img_blue)
+    saliency_red = __calculate_one_channel(img_red)
+    saliency_green = __calculate_one_channel(img_green)
+    saliency_blue = __calculate_one_channel(img_blue)
     saliency = (saliency_red + saliency_green + saliency_blue) / 3
     return saliency
 
 
 def get_objectness(img: ndarray, mask: ndarray, theta_ms: float = 0.0, learned: bool = False) -> float:
-    saliency = calculate_multiscale_saliency(img, 1)  # calculate integral image to boost computation across multiple proposals
+    saliency = __calculate_multiscale_saliency(img, 1)  # calculate integral image to boost computation across multiple proposals
     if not learned:
         theta_ms = np.max(saliency) * (2.0 / 3.0)
     mask_coords = np.transpose(np.where(mask))

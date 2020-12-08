@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Tuple
 
 from numpy.core.multiarray import ndarray
 
 
-def get_n8(matrix: ndarray, r_idx: int, p_idx: int) -> List[(int, int)]:
+def get_n8(matrix: ndarray, r_idx: int, p_idx: int) -> List[Tuple[int, int]]:
     all_possibilities = [(r_idx - 1, p_idx - 1),
                          (r_idx - 1, p_idx),
                          (r_idx - 1, p_idx + 1),
