@@ -2,16 +2,20 @@ import cv2
 import datetime
 import json
 
+from skimage.filters import gaussian
+
 import edgebox as eb
-import edgeboxcol as ebc
+import edgebox_coloring as ebc
 import multiscale_saliency as ms
 import color_contrast as cc
+import superpixel_stradling as ss
+import superpixel_stradling_coloring as ssc
 import numpy as np
 from numpy.core.multiarray import ndarray
 from multiprocessing import Pool
 from attentionmask.mask import decode
 
-from skimage.transform import resize
+from skimage.transform import rescale
 
 
 def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int):
@@ -82,13 +86,19 @@ def parallel_calc(mask_path, image_path):
 
 
 if __name__ == '__main__':
-
-    test_img = cv2.imread("assets/testImage_brutalismus.jpg")
-    cc.get_objectness(test_img, 0, 0, 100, 100)
-    halb = cc.get_objectness(test_img, 0, 40, 550, 150)    # halbes Gebäude
-    ganz = cc.get_objectness(test_img, 0, 40, 550, 266)    # fast ganzes Gebäude
-    print(halb)
-    print(ganz)
+    # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
+    test_img = rescale(cv2.imread("assets/testImage_kubus.jpg"), (0.1, 0.1, 1.0))
+    # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
+    # test_img = rescale(cv2.imread("assets/testImage_brutalismus.jpg"), (1.0, 1.0, 1.0))
+    cv2.imshow("test_img", np.array(test_img))
+    cv2.imshow("test_img (blur)", gaussian(np.array(test_img), sigma=1.5))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    S = ss.segmentate(test_img)
+    seg_test = ssc.color_segmentation(test_img, S)
+    cv2.imshow("seg_test", seg_test)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # exit()
     #
