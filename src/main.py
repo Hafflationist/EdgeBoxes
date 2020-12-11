@@ -117,11 +117,12 @@ def parallel_calc(mask_path: str, weights: Tuple[float, float, float, float]):
     data_grouped = [(iid, [proposal for proposal in data if proposal['image_id'] == iid], weights)
                     for iid in image_ids]
 
+    new_data_grouped_nested: List[List[dict]]
     with Pool(6) as pool:
-        new_data_grouped_nested: List[List[dict]] = pool.starmap(process_proposal_group, data_grouped)
-        new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
-        print(new_data_grouped)
-        # TODO write new_data_grouped into separate file
+        new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
+    new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
+    with open(mask_path + "2", "w") as file:
+        json.dump(new_data_grouped, file)
 
 
 if __name__ == '__main__':
