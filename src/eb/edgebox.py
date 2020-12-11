@@ -7,7 +7,8 @@ import math
 from functools import reduce
 from numpy.core.multiarray import ndarray
 
-from utils.utils import get_n8
+from src.eb.EdgeboxFoundation import EdgeboxFoundation
+from src.utils.utils import get_n8
 
 
 def detect_edges(img):
@@ -209,18 +210,23 @@ def get_weights(edges_with_grouping_orig: ndarray,
     return w
 
 
-def get_objectness(edges_nms: ndarray,
-                   edges_with_grouping: ndarray,
-                   groups_members: ndarray,
-                   affinities: ndarray,
+def image_2_foundation(img: ndarray) -> EdgeboxFoundation:
+    edges_nms, orientation_map = detect_edges(img)
+    edges_with_grouping, groups_members = group_edges(edges_nms, orientation_map)
+    affinities = calculate_affinities(groups_members, orientation_map)
+    return EdgeboxFoundation(edges_nms, edges_with_grouping, groups_members, affinities)
+
+
+def get_objectness(foundation: EdgeboxFoundation,
                    left: int, top: int, right: int, bottom: int) -> (float, float):
     def sum_magnitudes(matrix: ndarray, members: ndarray):
         return np.sum(list(map(lambda coord: matrix[coord[0], coord[1]], members)))
 
-    groups_in_box = np.unique(edges_with_grouping[top:bottom, left:right, 1])
-    sum_of_magnitudes: list = [sum_magnitudes(edges_nms, members) for members in groups_members]
+    groups_in_box = np.unique(foundation.edges_with_grouping[top:bottom, left:right, 1])
+    sum_of_magnitudes: list = [sum_magnitudes(foundation.edges_nms, members) for members in foundation.groups_members]
 
-    w = get_weights(edges_with_grouping, groups_members, affinities, left, top, right, bottom)
+    w = get_weights(foundation.edges_with_grouping, foundation.groups_members, foundation.affinities,
+                    left, top, right, bottom)
     h = np.sum(list(map(lambda group_id: w[group_id] * sum_of_magnitudes[group_id], groups_in_box)))
     h /= 2 * (((right - left) + (bottom - top)) ** 1.5)
 

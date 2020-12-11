@@ -1,21 +1,21 @@
 import cv2
 import datetime
 import json
+import itertools
 
 from skimage.filters import gaussian
+from src.attentionmask.mask import decode
+from skimage.transform import rescale
 
-import edgebox as eb
-import edgebox_coloring as ebc
-import multiscale_saliency as ms
-import color_contrast as cc
-import superpixel_stradling as ss
-import superpixel_stradling_coloring as ssc
+from src.eb import edgebox_coloring as ebc, edgebox as eb, EdgeboxFoundation
+from src.cc import color_contrast as cc, ColorContrastFoundation
+from src.ms import multiscale_saliency as ms, MultiscaleSaliencyFoundation
+from src.ss import superpixel_stradling_coloring as ssc, superpixel_stradling as ss, SuperpixelStradlingFoundation
 import numpy as np
+
 from numpy.core.multiarray import ndarray
 from multiprocessing import Pool
-from attentionmask.mask import decode
-
-from skimage.transform import rescale
+from typing import Tuple, Any, List, Set
 
 
 def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int):
@@ -62,7 +62,7 @@ def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int,
     print(obj)
 
 
-def segmentation_2_borders_and_mask(seg):
+def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, Any]:
     mask = decode(seg)
     coords = np.where(mask == 1)
     row_coords = coords[0]
@@ -70,31 +70,70 @@ def segmentation_2_borders_and_mask(seg):
     return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), (mask == 1)
 
 
-def process_single_proposal(img: ndarray, proposal: dict):
+def process_single_proposal(proposal: dict,
+                            cc_foundation: ColorContrastFoundation,
+                            eb_foundation: EdgeboxFoundation,
+                            ms_foundation: MultiscaleSaliencyFoundation,
+                            ss_foundation: SuperpixelStradlingFoundation,
+                            weights: Tuple[float, float, float, float]) -> float:
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
-    objectness = eb.do_all(img, left, top, right, bottom)
+
+    cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
+    eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)
+    ms_objectness = ms.get_objectness(ms_foundation, mask)
+    ss_objectness = ss.get_objectness(ss_foundation, left, top, right, bottom)
+    objectness = weights[0] * cc_objectness \
+                 + weights[1] * eb_objectness \
+                 + weights[2] * ms_objectness \
+                 + weights[3] * ss_objectness
     return objectness
 
 
-def parallel_calc(mask_path, image_path):
-    img = cv2.imread(image_path)
+def process_proposal_group(image_id: int,
+                           proposals: List[dict],
+                           weights: Tuple[float, float, float, float]) -> List[dict]:
+    img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
+    cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
+    eb_foundation: EdgeboxFoundation = eb.image_2_foundation(img)
+    ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
+    ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img)
+
+    def new_proposal(proposal: dict):
+        objectness = process_single_proposal(proposal,
+                                             cc_foundation, eb_foundation, ms_foundation, ss_foundation,
+                                             weights)
+        proposal['objn'] = objectness
+        return proposal
+
+    return list(map(new_proposal, proposals))
+
+
+def parallel_calc(mask_path: str, weights: Tuple[float, float, float, float]):
     with open(mask_path) as file:
         data = json.load(file)
-    tupled_data = list(map(lambda x: (img, x), data))
+
+    image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
+    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float]]]
+    data_grouped = [(iid, [proposal for proposal in data if proposal['image_id'] == iid], weights)
+                    for iid in image_ids]
+
     with Pool(6) as pool:
-        return pool.starmap(process_single_proposal, tupled_data)
+        new_data_grouped_nested: List[List[dict]] = pool.starmap(process_proposal_group, data_grouped)
+        new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
+        print(new_data_grouped)
+        # TODO write new_data_grouped into separate file
 
 
 if __name__ == '__main__':
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
-    test_img = rescale(cv2.imread("assets/testImage_kubus.jpg"), (0.1, 0.1, 1.0))
+    test_img = rescale(cv2.imread("../assets/testImage_kubus.jpg"), (0.1, 0.1, 1.0))
     # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
     # test_img = rescale(cv2.imread("assets/testImage_brutalismus.jpg"), (1.0, 1.0, 1.0))
     cv2.imshow("test_img", np.array(test_img))
     cv2.imshow("test_img (blur)", gaussian(np.array(test_img), sigma=1.5))
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    S = ss.segmentate(test_img)
+    S = ss.__segmentate(test_img)
     seg_test = ssc.color_segmentation(test_img, S)
     cv2.imshow("seg_test", seg_test)
     cv2.waitKey(0)
@@ -119,8 +158,10 @@ if __name__ == '__main__':
     before = datetime.datetime.now()
     input_map = [(test_img, 0, 40, 550, 150), (test_img, 0, 40, 550, 266)]
 
+
     def hugo(x):
         return eb.do_all(x[0], x[1], x[2], x[3], x[4])
+
 
     with Pool(2) as p:
         result = p.map(hugo, input_map)

@@ -7,11 +7,11 @@ from tqdm import tqdm
 from typing import List, Set, Iterable, Tuple
 from numpy.core.multiarray import ndarray
 
-from utils.DisjointSet import DisjointSet
-from utils.utils import get_n8
+from src.ss.DisjointSet import DisjointSet
+from src.ss.SuperpixelStradlingFoundation import SuperpixelStradlingFoundation
+from src.utils.utils import get_n8
 
 
-# TODO check performance
 def __generate_weight_matrix(img: ndarray) -> lil_matrix:
     (rows, columns, _) = img.shape
     spare_weights = lil_matrix((rows * columns, rows * columns))
@@ -57,7 +57,7 @@ def __mint(component_1: Set[Tuple[int, int]],
     return min(int_1 + tau(component_1), int_2 + tau(component_2))
 
 
-def segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
+def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
     img = gaussian(img, sigma=1.5)
     print("Generate weight for a " + str(img.shape))
     weights = __generate_weight_matrix(img)
@@ -94,10 +94,14 @@ def segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
     return list(S.iter_sets())
 
 
-def get_objectness(img: ndarray,
+def image_2_foundation(img: ndarray) -> SuperpixelStradlingFoundation:
+    return SuperpixelStradlingFoundation(__segmentate(img))
+
+
+def get_objectness(foundation: SuperpixelStradlingFoundation,
                    left: int, top: int, right: int, bottom: int,
                    theta_ms: float = 0.0,
                    learned: bool = False) -> float:
-    S = segmentate(img)
-
+    S = foundation.segmentation
+    # TODO: Implement me!
     return 0.0

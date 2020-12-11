@@ -5,6 +5,8 @@ from skimage.transform import resize
 from skimage.filters import gaussian
 from scipy.ndimage import convolve
 
+from src.ms.MultiscaleSaliencyFoundation import MultiscaleSaliencyFoundation
+
 
 def __calculate_one_channel(img_mono: ndarray) -> ndarray:
     complex_img = numpy.fft.fft2(img_mono)
@@ -39,12 +41,18 @@ def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
     return saliency
 
 
-def get_objectness(img: ndarray, mask: ndarray, theta_ms: float = 0.0, learned: bool = False) -> float:
-    saliency = __calculate_multiscale_saliency(img, 1)  # calculate integral image to boost computation across multiple proposals
+def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
+    return MultiscaleSaliencyFoundation(__calculate_multiscale_saliency(img, 1))
+
+
+def get_objectness(foundation: MultiscaleSaliencyFoundation,
+                   mask: ndarray,
+                   theta_ms: float = 0.0,
+                   learned: bool = False) -> float:
     if not learned:
-        theta_ms = np.max(saliency) * (2.0 / 3.0)
+        theta_ms = np.max(foundation.saliency) * (2.0 / 3.0)
     mask_coords = np.transpose(np.where(mask))
-    mask_values = list(map(lambda idx: saliency[idx], mask_coords))
+    mask_values = list(map(lambda idx: foundation.saliency[idx], mask_coords))
     mask_values_filtered = filter(lambda p: p >= theta_ms, mask_values)
     mask_n = len(mask_coords)
     return np.sum(mask_values_filtered) * float(len(mask_values) / float(mask_n))
