@@ -3,5 +3,4 @@ pycocotools
 scikit-image
 scipy
 tqdm
-cv
 dataclasses
