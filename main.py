@@ -81,7 +81,7 @@ def process_single_proposal(proposal: dict,
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
 
     cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
-    eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)
+    eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     ms_objectness = ms.get_objectness(ms_foundation, mask)
     ss_objectness = ss.get_objectness(ss_foundation, left, top, right, bottom)
     objectness = weights[0] * cc_objectness \
