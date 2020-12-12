@@ -2,6 +2,7 @@ import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix, lil_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 from skimage.filters import gaussian
+from skimage.transform import rescale
 from tqdm import tqdm
 
 from typing import List, Set, Iterable, Tuple
@@ -95,7 +96,12 @@ def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
 
 
 def image_2_foundation(img: ndarray) -> SuperpixelStradlingFoundation:
-    return SuperpixelStradlingFoundation(__segmentate(img))
+    r, c, _ = img.shape
+    factor = 1.0
+    if r * c > (128 ** 2):
+        factor = ((128.0 ** 2.0) / float(r * c)) ** 0.5
+        img = rescale(img, (factor, factor, 1.0))
+    return SuperpixelStradlingFoundation(__segmentate(img), factor)
 
 
 def get_objectness(foundation: SuperpixelStradlingFoundation,

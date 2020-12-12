@@ -155,7 +155,7 @@ def main() -> None:
 if __name__ == '__main__':
     main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
-    test_img = rescale(cv2.imread("assets/testImage_kubus.jpg"), (0.1, 0.1, 1.0))
+    test_img = cv2.imread("assets/testImage_kubus.jpg")
     # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
     # test_img = rescale(cv2.imread("assets/testImage_brutalismus.jpg"), (1.0, 1.0, 1.0))
     cv2.imshow("test_img", np.array(test_img))
