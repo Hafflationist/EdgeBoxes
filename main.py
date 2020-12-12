@@ -108,6 +108,11 @@ def process_proposal_group(image_id: int,
         proposal['objn'] = objectness
         return proposal
 
+    obj_list = list(map(lambda p: p['objn'], proposals))
+    obj_max = np.max(obj_list)
+    obj_min = np.min(obj_list)
+    for proposal in proposals:
+        proposal['objn'] = (proposal['objn'] - obj_min) / (obj_max - obj_min)
     return list(map(new_proposal, proposals))
 
 
@@ -153,7 +158,33 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+
+    field = [
+        [1, 2, 3, 4, 5],
+        [2, 3, 4, 5, 6],
+        [3, 4, 5, 6, 7],
+        [4, 5, 6, 7, 8],
+        [5, 6, 7, 8, 9]
+    ]
+
+    coords = [
+        (0, 2),
+        (1, 1),
+        (2, 2),
+        (3, 0),
+        (4, 3),
+        (0, 4)
+    ]
+
+    def mapper(value):
+        print(value)
+        print(field[coords])
+        return value
+    hugo = list(map(mapper, coords))
+    print("hugo")
+    print(hugo)
+
+    # main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     test_img = cv2.imread("assets/testImage_kubus.jpg")
     # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
