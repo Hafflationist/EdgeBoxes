@@ -38,7 +38,7 @@ def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
     saliency_green = __calculate_one_channel(img_green)
     saliency_blue = __calculate_one_channel(img_blue)
     saliency = (saliency_red + saliency_green + saliency_blue) / 3
-    return saliency
+    return resize(saliency, img_orig.shape)
 
 
 def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
