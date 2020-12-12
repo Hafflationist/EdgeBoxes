@@ -108,12 +108,13 @@ def process_proposal_group(image_id: int,
         proposal['objn'] = objectness
         return proposal
 
-    obj_list = list(map(lambda p: p['objn'], proposals))
+    new_proposals = list(map(new_proposal, proposals))
+    obj_list = list(map(lambda p: p['objn'], new_proposals))
     obj_max = np.max(obj_list)
     obj_min = np.min(obj_list)
-    for proposal in proposals:
+    for proposal in new_proposals:
         proposal['objn'] = (proposal['objn'] - obj_min) / (obj_max - obj_min)
-    return list(map(new_proposal, proposals))
+    return new_proposals
 
 
 def parallel_calc(proposals_path: str,
