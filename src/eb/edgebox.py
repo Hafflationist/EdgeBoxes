@@ -125,7 +125,7 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
                 or groups_min_row_idx[group_id_2] - groups_max_row_idx[group_id_1] > distance
                 or groups_min_col_idx[group_id_1] - groups_max_col_idx[group_id_2] > distance
                 or groups_min_col_idx[group_id_2] - groups_max_col_idx[group_id_1] > distance):
-            return 999999999.999
+            return math.inf
         mean_1 = groups_mean_position[group_id_1]
         mean_2 = groups_mean_position[group_id_2]
         c_with_d_1 = [(r, p, (r - mean_2[0])**2 + (p - mean_2[1])**2) for (r, p) in groups_members[group_id_1]]

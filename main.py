@@ -1,7 +1,9 @@
+import argparse
 import cv2
 import datetime
-import json
 import itertools
+import json
+import sys
 
 from skimage.filters import gaussian
 from src.attentionmask.mask import decode
@@ -18,7 +20,7 @@ from multiprocessing import Pool
 from typing import Tuple, Any, List, Set
 
 
-def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int):
+def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int) -> None:
     b2 = datetime.datetime.now()
     edges_nms, orientation_map = eb.detect_edges(img)
     a = datetime.datetime.now()
@@ -93,6 +95,7 @@ def process_proposal_group(image_id: int,
                            proposals: List[dict],
                            weights: Tuple[float, float, float, float]) -> List[dict]:
     img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
+    assert(img is not None)
     cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
     eb_foundation: EdgeboxFoundation = eb.image_2_foundation(img)
     ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
@@ -108,24 +111,49 @@ def process_proposal_group(image_id: int,
     return list(map(new_proposal, proposals))
 
 
-def parallel_calc(mask_path: str, weights: Tuple[float, float, float, float]):
-    with open(mask_path) as file:
-        data = json.load(file)
-
+def parallel_calc(proposals_path: str,
+                  proposals_nmax: int,
+                  weights: Tuple[float, float, float, float]) -> None:
+    with open(proposals_path) as file:
+        data = json.load(file)[:proposals_nmax]
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
     data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float]]]
-    data_grouped = [(iid, [proposal for proposal in data if proposal['image_id'] == iid], weights)
+    data_grouped = [(iid,
+                     list(filter(lambda proposal: proposal['image_id'] == iid, data)),
+                     weights)
                     for iid in image_ids]
-
     new_data_grouped_nested: List[List[dict]]
-    with Pool(6) as pool:
+    with Pool(1) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
-    with open(mask_path + "2", "w") as file:
+    with open(proposals_path + "2", "w") as file:
         json.dump(new_data_grouped, file)
 
 
+def parse_args() -> Tuple[str, int]:
+    parser = argparse.ArgumentParser(description="Description for my parser")
+    parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
+    parser.add_argument("-n", "--nmax",
+                        help="Maximum number of proposals to be processed",
+                        required=False,
+                        default="infinity")
+
+    argument = parser.parse_args()
+    nmax = sys.maxsize
+    if argument.nmax != "infinity":
+        nmax = int(argument.nmax)
+    return argument.proposals, nmax
+
+
+def main() -> None:
+    proposals_path, proposals_nmax = parse_args()
+    print("searching for max {0} proposals in {1}".format(proposals_nmax, proposals_path))
+    parallel_calc(proposals_path, proposals_nmax, (0.25, 0.25, 0.25, 0.25))
+    exit()
+
+
 if __name__ == '__main__':
+    main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     test_img = rescale(cv2.imread("assets/testImage_kubus.jpg"), (0.1, 0.1, 1.0))
     # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
