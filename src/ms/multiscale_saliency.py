@@ -53,6 +53,6 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
         theta_ms = np.max(foundation.saliency) * (2.0 / 3.0)
     mask_coords = np.transpose(np.where(mask))
     mask_values = list(map(lambda idx: foundation.saliency[idx], mask_coords))
-    mask_values_filtered = filter(lambda p: p >= theta_ms, mask_values)
+    mask_values_filtered = list(filter(lambda p: p >= theta_ms, mask_values))
     mask_n = len(mask_coords)
     return np.sum(mask_values_filtered) * float(len(mask_values) / float(mask_n))
