@@ -159,33 +159,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-
-    field = [
-        [1, 2, 3, 4, 5],
-        [2, 3, 4, 5, 6],
-        [3, 4, 5, 6, 7],
-        [4, 5, 6, 7, 8],
-        [5, 6, 7, 8, 9]
-    ]
-
-    coords = [
-        (0, 2),
-        (1, 1),
-        (2, 2),
-        (3, 0),
-        (4, 3),
-        (0, 4)
-    ]
-
-    def mapper(value):
-        print(value)
-        print(field[coords])
-        return value
-    hugo = list(map(mapper, coords))
-    print("hugo")
-    print(hugo)
-
-    # main()
+    main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     test_img = cv2.imread("assets/testImage_kubus.jpg")
     # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
