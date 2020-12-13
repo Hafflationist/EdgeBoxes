@@ -109,7 +109,8 @@ def get_objectness(foundation: SuperpixelStradlingFoundation,
                    theta_ms: float = 0.0,
                    learned: bool = False) -> float:
     segmentation = foundation.segmentation
-    mask_coords_scaled: Set[Tuple[int, int]] = set(map(lambda x: (x[0], x[1]), np.rint(mask_coords * foundation.scale).astype(int)))
+    mask_coords_scaled: Set[Tuple[int, int]]
+    mask_coords_scaled = set(map(lambda x: (x[0], x[1]), np.rint(mask_coords * foundation.scale).astype(int)))
     mask_coords_scaled_len = len(mask_coords_scaled)
 
     def calc_stradling(component: Set[Tuple[int, int]]):

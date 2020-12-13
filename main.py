@@ -84,7 +84,7 @@ def process_single_proposal(proposal: dict,
     cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
     eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     ms_objectness = ms.get_objectness(ms_foundation, mask)
-    ss_objectness = ss.get_objectness(ss_foundation, left, top, right, bottom)
+    ss_objectness = ss.get_objectness(ss_foundation, mask)
     objectness = weights[0] * cc_objectness \
                  + weights[1] * eb_objectness \
                  + weights[2] * ms_objectness \
