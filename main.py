@@ -132,7 +132,7 @@ def parallel_calc(proposals_path: str,
     with Pool(1) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
-    with open(proposals_path + "2", "w") as file:
+    with open(proposals_path + ".json", "w") as file:
         json.dump(new_data_grouped, file)
 
 
