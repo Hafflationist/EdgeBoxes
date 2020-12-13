@@ -46,12 +46,11 @@ def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
 
 
 def get_objectness(foundation: MultiscaleSaliencyFoundation,
-                   mask: ndarray,
+                   mask_coords: ndarray,
                    theta_ms: float = 0.0,
                    learned: bool = False) -> float:
     if not learned:
         theta_ms = np.max(foundation.saliency) * (2.0 / 3.0)
-    mask_coords = np.transpose(np.where(mask))
     mask_values = np.array(list(map(lambda idx: foundation.saliency[idx[0], idx[1]], mask_coords)))
     mask_values_filtered = list(filter(lambda p: p >= theta_ms, mask_values))
     mask_n = len(mask_coords)

@@ -64,12 +64,13 @@ def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int,
     print(obj)
 
 
-def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, Any]:
+def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, ndarray]:
     mask = decode(seg)
     coords = np.where(mask == 1)
+    mask_coords = np.transpose(coords)
     row_coords = coords[0]
     col_coords = coords[1]
-    return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), (mask == 1)
+    return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), mask_coords
 
 
 def process_single_proposal(proposal: dict,
