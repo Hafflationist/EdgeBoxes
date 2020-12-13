@@ -105,9 +105,15 @@ def image_2_foundation(img: ndarray) -> SuperpixelStradlingFoundation:
 
 
 def get_objectness(foundation: SuperpixelStradlingFoundation,
-                   left: int, top: int, right: int, bottom: int,
+                   mask_coords: ndarray,
                    theta_ms: float = 0.0,
                    learned: bool = False) -> float:
-    S = foundation.segmentation
-    # TODO: Implement me!
-    return 0.0
+    segmentation = foundation.segmentation
+    mask_coords_scaled: Set[Tuple[int, int]] = set(map(lambda x: (x[0], x[1]), np.rint(mask_coords * foundation.scale).astype(int)))
+    mask_coords_scaled_len = len(mask_coords_scaled)
+
+    def calc_stradling(component: Set[Tuple[int, int]]):
+        intersection_len = len(mask_coords_scaled.intersection(component))
+        return min(intersection_len, len(component) - intersection_len)
+
+    return 1.0 - (sum(list(map(calc_stradling, segmentation))) / mask_coords_scaled_len)
