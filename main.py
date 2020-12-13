@@ -143,7 +143,7 @@ def parallel_calc(proposals_path: str,
     with Pool(1) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
-    with open(proposals_path + "-ss.json", "w") as file:
+    with open(proposals_path + ".json", "w") as file:
         json.dump(new_data_grouped, file)
 
 
@@ -165,7 +165,7 @@ def parse_args() -> Tuple[str, int]:
 def main() -> None:
     proposals_path, proposals_nmax = parse_args()
     print("searching for max {0} proposals in {1}".format(proposals_nmax, proposals_path))
-    parallel_calc(proposals_path, proposals_nmax, (0.0, 0.0, 0.0, 1.0))# (0.25, 0.25, 0.25, 0.25))
+    parallel_calc(proposals_path, proposals_nmax, (0.25, 0.25, 0.25, 0.25))
     exit()
 
 
