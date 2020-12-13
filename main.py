@@ -140,6 +140,7 @@ def parallel_calc(proposals_path: str,
                      weights)
                     for iid in image_ids]
     new_data_grouped_nested: List[List[dict]]
+    print("{0} proposal groups found".format(len(data_grouped)))
     with Pool(1) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))

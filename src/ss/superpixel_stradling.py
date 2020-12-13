@@ -16,7 +16,6 @@ from src.utils.utils import get_n8
 def __generate_weight_matrix(img: ndarray) -> lil_matrix:
     (rows, columns, _) = img.shape
     spare_weights = lil_matrix((rows * columns, rows * columns))
-    print("lil_matrix.shape: " + str(spare_weights.shape))
     i = 0
     for row_idx in range(rows):
         for px_idx in range(columns):
@@ -31,7 +30,6 @@ def __generate_weight_matrix(img: ndarray) -> lil_matrix:
                          + (img[row_idx, px_idx, 2] - img[row_2_idx, px_2_idx, 2]) ** 2.0
                 spare_weights[linear, linear_2] = weight
                 spare_weights[linear_2, linear] = weight
-    print("__generate_weight_matrix.i: " + str(i))
     return spare_weights
 
 
@@ -60,17 +58,13 @@ def __mint(component_1: Set[Tuple[int, int]],
 
 def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
     img = gaussian(img, sigma=1.5)
-    print("Generate weight for a " + str(img.shape))
     weights = __generate_weight_matrix(img)
     weights_csr = weights.tocsr()
-    print("generated!")
     weights_coo: coo_matrix = weights.tocoo()
-    print("rows: " + str(len(weights_coo.row)))
     edge_list: Iterable[(int, int, float)] = zip(weights_coo.row, weights_coo.col, weights_coo.data)
     edge_list_sorted: List[Tuple[int, int, float]] = sorted(edge_list, key=lambda triplet: triplet[2])
     S: DisjointSet = DisjointSet[Tuple[int, int]]()
     (rows, columns, _) = img.shape
-    print("len(edge_sorted): " + str(len(edge_list_sorted)))
     for i in tqdm(range(len(edge_list_sorted))):
         (linear_1, linear_2, weight) = edge_list_sorted[i]
         if linear_1 == linear_2:
