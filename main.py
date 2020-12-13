@@ -90,7 +90,7 @@ def process_single_proposal(proposal: dict,
 
 def process_proposal_group(image_id: int,
                            proposals: List[dict],
-                           weights: Tuple[float, float, float, float]) -> List[Tuple[dict, float, float, float, float]]:
+                           weights: Tuple[float, float, float, float]) -> List[dict]:
     img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     assert (img is not None)
     cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
@@ -98,14 +98,13 @@ def process_proposal_group(image_id: int,
     ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
     ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img)
 
-    def new_proposal(proposal: dict):
-        cc_objectness, eb_objectness, ms_objectness, ss_objectness = process_single_proposal(proposal,
+    def new_proposal(old_proposal: dict):
+        cc_objectness, eb_objectness, ms_objectness, ss_objectness = process_single_proposal(old_proposal,
                                                                                              cc_foundation,
                                                                                              eb_foundation,
                                                                                              ms_foundation,
                                                                                              ss_foundation)
-        # proposal['objn'] = objectness
-        return proposal, cc_objectness, eb_objectness, ms_objectness, ss_objectness
+        return old_proposal, cc_objectness, eb_objectness, ms_objectness, ss_objectness
 
     new_proposals = list(map(new_proposal, proposals))
 
@@ -126,7 +125,7 @@ def process_proposal_group(image_id: int,
         ms_objn_eq = equalize(ms_objn, ms_objn_list_min, ms_objn_list_max) * weights[2]
         ss_objn_eq = equalize(ss_objn, ss_objn_list_min, ss_objn_list_max) * weights[3]
         proposal['objn'] = cc_objn_eq + eb_objn_eq + ms_objn_eq + ss_objn_eq
-    return new_proposals
+    return list(map(lambda x: x[0], new_proposals))
 
 
 def parallel_calc(proposals_path: str,
