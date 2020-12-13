@@ -77,44 +77,55 @@ def process_single_proposal(proposal: dict,
                             cc_foundation: ColorContrastFoundation,
                             eb_foundation: EdgeboxFoundation,
                             ms_foundation: MultiscaleSaliencyFoundation,
-                            ss_foundation: SuperpixelStradlingFoundation,
-                            weights: Tuple[float, float, float, float]) -> float:
+                            ss_foundation: SuperpixelStradlingFoundation) -> Tuple[float, float, float, float]:
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
 
     cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
     eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     ms_objectness = ms.get_objectness(ms_foundation, mask)
     ss_objectness = ss.get_objectness(ss_foundation, mask)
-    objectness = weights[0] * cc_objectness \
-                 + weights[1] * eb_objectness \
-                 + weights[2] * ms_objectness \
-                 + weights[3] * ss_objectness
-    return objectness
+
+    return cc_objectness, eb_objectness, ms_objectness, ss_objectness
 
 
 def process_proposal_group(image_id: int,
                            proposals: List[dict],
-                           weights: Tuple[float, float, float, float]) -> List[dict]:
+                           weights: Tuple[float, float, float, float]) -> List[Tuple[dict, float, float, float, float]]:
     img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
-    assert(img is not None)
+    assert (img is not None)
     cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
     eb_foundation: EdgeboxFoundation = eb.image_2_foundation(img)
     ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
     ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img)
 
     def new_proposal(proposal: dict):
-        objectness = process_single_proposal(proposal,
-                                             cc_foundation, eb_foundation, ms_foundation, ss_foundation,
-                                             weights)
-        proposal['objn'] = objectness
-        return proposal
+        cc_objectness, eb_objectness, ms_objectness, ss_objectness = process_single_proposal(proposal,
+                                                                                             cc_foundation,
+                                                                                             eb_foundation,
+                                                                                             ms_foundation,
+                                                                                             ss_foundation)
+        # proposal['objn'] = objectness
+        return proposal, cc_objectness, eb_objectness, ms_objectness, ss_objectness
 
     new_proposals = list(map(new_proposal, proposals))
-    obj_list = list(map(lambda p: p['objn'], new_proposals))
-    obj_max = np.max(obj_list)
-    obj_min = np.min(obj_list)
-    for proposal in new_proposals:
-        proposal['objn'] = (proposal['objn'] - obj_min) / (obj_max - obj_min)
+
+    def min_max_from_idx(idx: int) -> Tuple[float, float]:
+        objn_list = list(map(lambda p: p[idx], new_proposals))
+        return np.min(objn_list), np.max(objn_list)
+
+    def equalize(value: float, value_min: float, value_max: float) -> float:
+        return (value - value_min) / (value_max - value_min)
+
+    cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)
+    eb_objn_list_min, eb_objn_list_max = min_max_from_idx(2)
+    ms_objn_list_min, ms_objn_list_max = min_max_from_idx(3)
+    ss_objn_list_min, ss_objn_list_max = min_max_from_idx(4)
+    for proposal, cc_objn, eb_objn, ms_objn, ss_objn in new_proposals:
+        cc_objn_eq = equalize(cc_objn, cc_objn_list_min, cc_objn_list_max) * weights[0]
+        eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
+        ms_objn_eq = equalize(ms_objn, ms_objn_list_min, ms_objn_list_max) * weights[2]
+        ss_objn_eq = equalize(ss_objn, ss_objn_list_min, ss_objn_list_max) * weights[3]
+        proposal['objn'] = cc_objn_eq + eb_objn_eq + ms_objn_eq + ss_objn_eq
     return new_proposals
 
 
