@@ -90,8 +90,6 @@ def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
         edges_with_grouping[row_idx][px_idx][1] = new_group_id_candidate
         (row_idx, px_idx) = get_next_todo(edges_with_grouping, row_idx, px_idx)
 
-    print("#groups: " + str(new_group_id))
-    print("#edgepxs: " + str(len(np.where(edges_nms == 1)[0])))
     return edges_with_grouping, np.array(groups_members)
 
 
