@@ -130,7 +130,8 @@ def process_proposal_group(image_id: int,
 
 def parallel_calc(proposals_path: str,
                   proposals_nmax: int,
-                  weights: Tuple[float, float, float, float]) -> None:
+                  weights: Tuple[float, float, float, float],
+                  suffix: str) -> None:
     with open(proposals_path) as file:
         data = json.load(file)[:proposals_nmax]
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
@@ -144,29 +145,48 @@ def parallel_calc(proposals_path: str,
     with Pool(1) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
-    with open(proposals_path + ".json", "w") as file:
+    with open(proposals_path + suffix, "w") as file:
         json.dump(new_data_grouped, file)
 
 
-def parse_args() -> Tuple[str, int]:
+def parse_args() -> Tuple[str, int, int, str]:
     parser = argparse.ArgumentParser(description="Description for my parser")
     parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
     parser.add_argument("-n", "--nmax",
                         help="Maximum number of proposals to be processed",
                         required=False,
                         default="infinity")
+    parser.add_argument("-c", "--cue",
+                        help="Used cue to calculate objectness score (default=all, 0=CC, 1=EB, 2=MS, 3=SS)",
+                        required=False,
+                        default="")
+    parser.add_argument("-s", "--suffixofoutput",
+                        help="Suffix of output file (default=\"\")",
+                        required=False,
+                        default="")
 
     argument = parser.parse_args()
+    assert(0 <= argument.cue <= 3)
     nmax = sys.maxsize
     if argument.nmax != "infinity":
         nmax = int(argument.nmax)
-    return argument.proposals, nmax
+
+    return argument.proposals, nmax, argument.cue, argument.suffix
 
 
 def main() -> None:
-    proposals_path, proposals_nmax = parse_args()
+    proposals_path, proposals_nmax, cue, suffix = parse_args()
     print("searching for max {0} proposals in {1}".format(proposals_nmax, proposals_path))
-    parallel_calc(proposals_path, proposals_nmax, (0.25, 0.25, 0.25, 0.25))
+    weights = (0.25, 0.25, 0.25, 0.25)
+    if cue == 0:
+        weights = (1.0, 0.0, 0.0, 0.0)
+    elif cue == 1:
+        weights = (0.0, 1.0, 0.0, 0.0)
+    elif cue == 2:
+        weights = (0.0, 0.0, 1.0, 0.0)
+    elif cue == 3:
+        weights = (0.0, 0.0, 0.0, 1.0)
+    parallel_calc(proposals_path, proposals_nmax, weights, suffix)
     exit()
 
 

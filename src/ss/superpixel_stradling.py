@@ -27,7 +27,8 @@ def __generate_weight_matrix(img: ndarray) -> lil_matrix:
                     continue
                 weight = (img[row_idx, px_idx, 0] - img[row_2_idx, px_2_idx, 0]) ** 2.0 \
                          + (img[row_idx, px_idx, 1] - img[row_2_idx, px_2_idx, 1]) ** 2.0 \
-                         + (img[row_idx, px_idx, 2] - img[row_2_idx, px_2_idx, 2]) ** 2.0
+                         + (img[row_idx, px_idx, 2] - img[row_2_idx, px_2_idx, 2]) ** 2.0 \
+                         + 0.01
                 spare_weights[linear, linear_2] = weight
                 spare_weights[linear_2, linear] = weight
     return spare_weights
@@ -68,6 +69,8 @@ def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
     for i in tqdm(range(len(edge_list_sorted))):
         (linear_1, linear_2, weight) = edge_list_sorted[i]
         if linear_1 == linear_2:
+            continue
+        if weight == 0.0:
             continue
 
         row_1_idx = linear_1 // columns
