@@ -157,21 +157,21 @@ def parse_args() -> Tuple[str, int, int, str]:
                         required=False,
                         default="infinity")
     parser.add_argument("-c", "--cue",
-                        help="Used cue to calculate objectness score (default=all, 0=CC, 1=EB, 2=MS, 3=SS)",
+                        help="Used cue to calculate objectness score (default=all, -1=all, 0=CC, 1=EB, 2=MS, 3=SS)",
                         required=False,
-                        default="")
+                        default="-1")
     parser.add_argument("-s", "--suffixofoutput",
                         help="Suffix of output file (default=\"\")",
                         required=False,
                         default="")
 
     argument = parser.parse_args()
-    assert(0 <= argument.cue <= 3)
+    assert(-1 <= int(argument.cue) <= 3)
     nmax = sys.maxsize
     if argument.nmax != "infinity":
         nmax = int(argument.nmax)
 
-    return argument.proposals, nmax, argument.cue, argument.suffix
+    return argument.proposals, nmax, int(argument.cue), argument.suffix
 
 
 def main() -> None:
