@@ -1,3 +1,5 @@
+from itertools import dropwhile
+
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix, lil_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
@@ -64,13 +66,12 @@ def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
     weights_coo: coo_matrix = weights.tocoo()
     edge_list: Iterable[(int, int, float)] = zip(weights_coo.row, weights_coo.col, weights_coo.data)
     edge_list_sorted: List[Tuple[int, int, float]] = sorted(edge_list, key=lambda triplet: triplet[2])
+    edge_list_sorted = list(dropwhile(lambda x: x[2] == 0, edge_list_sorted))
     S: DisjointSet = DisjointSet[Tuple[int, int]]()
     (rows, columns, _) = img.shape
     for i in tqdm(range(len(edge_list_sorted))):
         (linear_1, linear_2, weight) = edge_list_sorted[i]
         if linear_1 == linear_2:
-            continue
-        if weight == 0.0:
             continue
 
         row_1_idx = linear_1 // columns
