@@ -171,7 +171,7 @@ def parse_args() -> Tuple[str, int, int, str]:
     if argument.nmax != "infinity":
         nmax = int(argument.nmax)
 
-    return argument.proposals, nmax, int(argument.cue), argument.suffix
+    return argument.proposals, nmax, int(argument.cue), argument.suffixofoutput
 
 
 def main() -> None:
