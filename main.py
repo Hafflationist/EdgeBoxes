@@ -98,6 +98,7 @@ def process_proposal_group(image_id: int,
                            weights: Tuple[float, float, float, float]) -> List[dict]:
     img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     assert (img is not None)
+    cc_foundation, eb_foundation, ms_foundation, ss_foundation = None, None, None, None
     if abs(weights[0]) > 0.0001:
         cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
         print("cc_foundation calculated!")
