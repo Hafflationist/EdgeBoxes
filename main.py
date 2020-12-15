@@ -77,13 +77,18 @@ def process_single_proposal(proposal: dict,
                             cc_foundation: ColorContrastFoundation,
                             eb_foundation: EdgeboxFoundation,
                             ms_foundation: MultiscaleSaliencyFoundation,
-                            ss_foundation: SuperpixelStradlingFoundation) -> Tuple[float, float, float, float]:
+                            ss_foundation: SuperpixelStradlingFoundation,
+                            weights: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
-
-    cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
-    eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
-    ms_objectness = ms.get_objectness(ms_foundation, mask)
-    ss_objectness = ss.get_objectness(ss_foundation, mask)
+    cc_objectness, eb_objectness, ms_objectness, ss_objectness = 0.0, 0.0, 0.0, 0.0
+    if abs(weights[0]) > 0.0001:
+        cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
+    if abs(weights[1]) > 0.0001:
+        eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
+    if abs(weights[2]) > 0.0001:
+        ms_objectness = ms.get_objectness(ms_foundation, mask)
+    if abs(weights[3]) > 0.0001:
+        ss_objectness = ss.get_objectness(ss_foundation, mask)
 
     return cc_objectness, eb_objectness, ms_objectness, ss_objectness
 
@@ -93,17 +98,26 @@ def process_proposal_group(image_id: int,
                            weights: Tuple[float, float, float, float]) -> List[dict]:
     img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     assert (img is not None)
-    cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
-    eb_foundation: EdgeboxFoundation = eb.image_2_foundation(img)
-    ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
-    ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img)
+    if abs(weights[0]) > 0.0001:
+        cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
+        print("cc_foundation calculated!")
+    if abs(weights[1]) > 0.0001:
+        eb_foundation: EdgeboxFoundation = eb.image_2_foundation(img)
+        print("eb_foundation calculated!")
+    if abs(weights[2]) > 0.0001:
+        ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
+        print("ms_foundation calculated!")
+    if abs(weights[3]) > 0.0001:
+        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img)
+        print("ss_foundation calculated!")
 
     def new_proposal(old_proposal: dict):
         cc_objectness, eb_objectness, ms_objectness, ss_objectness = process_single_proposal(old_proposal,
                                                                                              cc_foundation,
                                                                                              eb_foundation,
                                                                                              ms_foundation,
-                                                                                             ss_foundation)
+                                                                                             ss_foundation,
+                                                                                             weights)
         return old_proposal, cc_objectness, eb_objectness, ms_objectness, ss_objectness
 
     new_proposals = list(map(new_proposal, proposals))
