@@ -70,6 +70,8 @@ def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, ndarray]:
     mask_coords = np.transpose(coords)
     row_coords = coords[0]
     col_coords = coords[1]
+    if len(row_coords) == 0:
+        return 0, 0, 0, 0, np.array([(0, 0)]) 
     return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), mask_coords
 
 
@@ -139,7 +141,16 @@ def process_proposal_group(image_id: int,
         eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
         ms_objn_eq = equalize(ms_objn, ms_objn_list_min, ms_objn_list_max) * weights[2]
         ss_objn_eq = equalize(ss_objn, ss_objn_list_min, ss_objn_list_max) * weights[3]
-        proposal['objn'] = cc_objn_eq + eb_objn_eq + ms_objn_eq + ss_objn_eq
+        final_objn = 0.0
+        if abs(weights[0]) > 0.0001:
+            final_objn += cc_objn_eq
+        if abs(weights[1]) > 0.0001:
+            final_objn += eb_objn_eq
+        if abs(weights[2]) > 0.0001:
+            final_objn += ms_objn_eq
+        if abs(weights[3]) > 0.0001:
+            final_objn += ss_objn_eq
+        proposal['objn'] = final_objn 
     return list(map(lambda x: x[0], new_proposals))
 
 
@@ -157,7 +168,7 @@ def parallel_calc(proposals_path: str,
                     for iid in image_ids]
     new_data_grouped_nested: List[List[dict]]
     print("{0} proposal groups found".format(len(data_grouped)))
-    with Pool(1) as pool:
+    with Pool(12) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
     with open(proposals_path + suffix, "w") as file:
