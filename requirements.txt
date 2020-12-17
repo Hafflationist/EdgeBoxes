@@ -4,4 +4,5 @@ scikit-image
 scipy
 tqdm
 dataclasses
-opencv-python
+opencv-contrib-python
+
