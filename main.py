@@ -98,8 +98,11 @@ def process_single_proposal(proposal: dict,
 def process_proposal_group(image_id: int,
                            proposals: List[dict],
                            weights: Tuple[float, float, float, float]) -> List[dict]:
-    img = cv2.imread("/data_c/coco/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
+    img = cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
+    if img is None:
+        print("Image COCO_val2014_{0}.jpg not found!".format(str(image_id).zfill(12)))
     assert (img is not None)
+    
     cc_foundation, eb_foundation, ms_foundation, ss_foundation = None, None, None, None
     if abs(weights[0]) > 0.0001:
         cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
@@ -151,6 +154,7 @@ def process_proposal_group(image_id: int,
         if abs(weights[3]) > 0.0001:
             final_objn += ss_objn_eq
         proposal['objn'] = final_objn 
+        proposal['score'] = final_objn
     return list(map(lambda x: x[0], new_proposals))
 
 
@@ -166,9 +170,11 @@ def parallel_calc(proposals_path: str,
                      list(filter(lambda proposal: proposal['image_id'] == iid, data)),
                      weights)
                     for iid in image_ids]
+    for group in data_grouped:
+        print("Searching for image Image COCO_val2014_{0}.jpg".format(str(group[0]).zfill(12)))
     new_data_grouped_nested: List[List[dict]]
     print("{0} proposal groups found".format(len(data_grouped)))
-    with Pool(12) as pool:
+    with Pool(40) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
     with open(proposals_path + suffix, "w") as file:
