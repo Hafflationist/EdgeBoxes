@@ -48,9 +48,10 @@ def __int(component: Set[Tuple[int, int]], img_shape: (int, int), weights: csr_m
 def __mint(component_1: Set[Tuple[int, int]],
            component_2: Set[Tuple[int, int]],
            img_shape: (int, int),
-           weights: csr_matrix) -> float:
+           weights: csr_matrix,
+           theta_ss: float) -> float:
     def tau(c: Set):
-        k = (img_shape[0] + img_shape[1]) / 2000.0
+        k = ((img_shape[0] + img_shape[1]) / 2000.0) * theta_ss
         return k / len(c)
 
     int_1 = __int(component_1, img_shape, weights)
@@ -59,7 +60,7 @@ def __mint(component_1: Set[Tuple[int, int]],
     return min(int_1 + tau(component_1), int_2 + tau(component_2))
 
 
-def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
+def __segmentate(img: ndarray, theta_ss: float) -> List[Set[Tuple[int, int]]]:
     img = gaussian(img, sigma=1.5)
     weights = __generate_weight_matrix(img)
     weights_csr = weights.tocsr()
@@ -84,7 +85,7 @@ def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
 
         partition_1 = set(S.iter_specific_set((row_1_idx, px_1_idx)))
         partition_2 = set(S.iter_specific_set((row_2_idx, px_2_idx)))
-        mint = __mint(partition_1, partition_2, (rows, columns), weights_csr)
+        mint = __mint(partition_1, partition_2, (rows, columns), weights_csr, theta_ss)
         if weight > mint:
             continue
 
@@ -93,19 +94,17 @@ def __segmentate(img: ndarray) -> List[Set[Tuple[int, int]]]:
     return list(S.iter_sets())
 
 
-def image_2_foundation(img: ndarray) -> SuperpixelStradlingFoundation:
+def image_2_foundation(img: ndarray, theta_ss: float = 1.0) -> SuperpixelStradlingFoundation:
     r, c, _ = img.shape
     factor = 1.0
     if r * c > (128 ** 2):
         factor = ((128.0 ** 2.0) / float(r * c)) ** 0.5
         img = rescale(img, (factor, factor, 1.0))
-    return SuperpixelStradlingFoundation(__segmentate(img), factor)
+    return SuperpixelStradlingFoundation(__segmentate(img, theta_ss), factor)
 
 
 def get_objectness(foundation: SuperpixelStradlingFoundation,
-                   mask_coords: ndarray,
-                   theta_ms: float = 0.0,
-                   learned: bool = False) -> float:
+                   mask_coords: ndarray) -> float:
     segmentation = foundation.segmentation
     mask_coords_scaled: Set[Tuple[int, int]]
     mask_coords_scaled = set(map(lambda x: (x[0], x[1]), np.rint(mask_coords * foundation.scale).astype(int)))

@@ -71,7 +71,7 @@ def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, ndarray]:
     row_coords = coords[0]
     col_coords = coords[1]
     if len(row_coords) == 0:
-        return 0, 0, 0, 0, np.array([(0, 0)]) 
+        return 0, 0, 0, 0, np.array([(0, 0)])
     return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), mask_coords
 
 
@@ -80,15 +80,17 @@ def process_single_proposal(proposal: dict,
                             eb_foundation: EdgeboxFoundation,
                             ms_foundation: MultiscaleSaliencyFoundation,
                             ss_foundation: SuperpixelStradlingFoundation,
-                            weights: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
+                            weights: Tuple[float, float, float, float],
+                            theta_cc: float,
+                            theta_ms: float) -> Tuple[float, float, float, float]:
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
     cc_objectness, eb_objectness, ms_objectness, ss_objectness = 0.0, 0.0, 0.0, 0.0
     if abs(weights[0]) > 0.0001:
-        cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom)
+        cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom, theta_cc)
     if abs(weights[1]) > 0.0001:
         eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     if abs(weights[2]) > 0.0001:
-        ms_objectness = ms.get_objectness(ms_foundation, mask)
+        ms_objectness = ms.get_objectness(ms_foundation, mask, theta_ms, learned=True)
     if abs(weights[3]) > 0.0001:
         ss_objectness = ss.get_objectness(ss_foundation, mask)
 
@@ -97,12 +99,15 @@ def process_single_proposal(proposal: dict,
 
 def process_proposal_group(image_id: int,
                            proposals: List[dict],
-                           weights: Tuple[float, float, float, float]) -> List[dict]:
+                           weights: Tuple[float, float, float, float],
+                           theta_cc: float,
+                           theta_ms: float,
+                           theta_ss: float) -> List[dict]:
     img = cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     if img is None:
         print("Image COCO_val2014_{0}.jpg not found!".format(str(image_id).zfill(12)))
     assert (img is not None)
-    
+
     cc_foundation, eb_foundation, ms_foundation, ss_foundation = None, None, None, None
     if abs(weights[0]) > 0.0001:
         cc_foundation: ColorContrastFoundation = cc.image_2_foundation(img)
@@ -114,7 +119,7 @@ def process_proposal_group(image_id: int,
         ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
         print("ms_foundation calculated!")
     if abs(weights[3]) > 0.0001:
-        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img)
+        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss)
         print("ss_foundation calculated!")
 
     def new_proposal(old_proposal: dict):
@@ -123,7 +128,9 @@ def process_proposal_group(image_id: int,
                                                                                              eb_foundation,
                                                                                              ms_foundation,
                                                                                              ss_foundation,
-                                                                                             weights)
+                                                                                             weights,
+                                                                                             theta_cc,
+                                                                                             theta_ms)
         return old_proposal, cc_objectness, eb_objectness, ms_objectness, ss_objectness
 
     new_proposals = list(map(new_proposal, proposals))
@@ -153,7 +160,7 @@ def process_proposal_group(image_id: int,
             final_objn += ms_objn_eq
         if abs(weights[3]) > 0.0001:
             final_objn += ss_objn_eq
-        proposal['objn'] = final_objn 
+        proposal['objn'] = final_objn
         proposal['score'] = final_objn
     return list(map(lambda x: x[0], new_proposals))
 
@@ -161,14 +168,20 @@ def process_proposal_group(image_id: int,
 def parallel_calc(proposals_path: str,
                   proposals_nmax: int,
                   weights: Tuple[float, float, float, float],
-                  suffix: str) -> None:
+                  suffix: str,
+                  theta_cc: float,
+                  theta_ms: float,
+                  theta_ss: float) -> None:
     with open(proposals_path) as file:
         data = json.load(file)[:proposals_nmax]
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
-    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float]]]
+    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float], float, float, float]]
     data_grouped = [(iid,
                      list(filter(lambda proposal: proposal['image_id'] == iid, data)),
-                     weights)
+                     weights,
+                     theta_cc,
+                     theta_ms,
+                     theta_ss)
                     for iid in image_ids]
     for group in data_grouped:
         print("Searching for image Image COCO_val2014_{0}.jpg".format(str(group[0]).zfill(12)))
@@ -181,7 +194,7 @@ def parallel_calc(proposals_path: str,
         json.dump(new_data_grouped, file)
 
 
-def parse_args() -> Tuple[str, int, int, str]:
+def parse_args() -> Tuple[str, int, int, str, float, float, float]:
     parser = argparse.ArgumentParser(description="Description for my parser")
     parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
     parser.add_argument("-n", "--nmax",
@@ -196,18 +209,36 @@ def parse_args() -> Tuple[str, int, int, str]:
                         help="Suffix of output file (default=\"\")",
                         required=False,
                         default="")
+    parser.add_argument("", "--theta_cc",
+                        help="Learned parameter for CC (1.0 < theta_cc < 4.0)",
+                        required=False,
+                        default="2.0")
+    parser.add_argument("", "--theta_ms",
+                        help="Learned parameter for MS (0.0 < theta_ms < 1.0)",
+                        required=False,
+                        default="0.6")
+    parser.add_argument("", "--theta_ss",
+                        help="Learned parameter for SS (0.0 < theta_ss < 2.0)",
+                        required=False,
+                        default="1.0")
 
     argument = parser.parse_args()
-    assert(-1 <= int(argument.cue) <= 3)
+    assert (-1 <= int(argument.cue) <= 3)
     nmax = sys.maxsize
     if argument.nmax != "infinity":
         nmax = int(argument.nmax)
 
-    return argument.proposals, nmax, int(argument.cue), argument.suffixofoutput
+    return argument.proposals, \
+           nmax, \
+           int(argument.cue), \
+           argument.suffixofoutput, \
+           float(argument.theta_cc), \
+           float(argument.theta_ms), \
+           float(argument.theta_ss)
 
 
 def main() -> None:
-    proposals_path, proposals_nmax, cue, suffix = parse_args()
+    proposals_path, proposals_nmax, cue, suffix, theta_cc, theta_ms, theta_ss = parse_args()
     print("searching for max {0} proposals in {1}".format(proposals_nmax, proposals_path))
     weights = (0.25, 0.25, 0.25, 0.25)
     if cue == 0:
@@ -218,7 +249,7 @@ def main() -> None:
         weights = (0.0, 0.0, 1.0, 0.0)
     elif cue == 3:
         weights = (0.0, 0.0, 0.0, 1.0)
-    parallel_calc(proposals_path, proposals_nmax, weights, suffix)
+    parallel_calc(proposals_path, proposals_nmax, weights, suffix, theta_cc, theta_ms, theta_ss)
     exit()
 
 
