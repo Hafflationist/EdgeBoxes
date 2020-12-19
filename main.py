@@ -209,15 +209,15 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float]:
                         help="Suffix of output file (default=\"\")",
                         required=False,
                         default="")
-    parser.add_argument("", "--theta_cc",
+    parser.add_argument("-x", "--theta_cc",
                         help="Learned parameter for CC (1.0 < theta_cc < 4.0)",
                         required=False,
                         default="2.0")
-    parser.add_argument("", "--theta_ms",
+    parser.add_argument("-y", "--theta_ms",
                         help="Learned parameter for MS (0.0 < theta_ms < 1.0)",
                         required=False,
                         default="0.6")
-    parser.add_argument("", "--theta_ss",
+    parser.add_argument("-z", "--theta_ss",
                         help="Learned parameter for SS (0.0 < theta_ss < 2.0)",
                         required=False,
                         default="1.0")
