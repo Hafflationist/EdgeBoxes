@@ -1,6 +1,7 @@
 from itertools import dropwhile
 
 import numpy as np
+import cv2
 from scipy.sparse import csr_matrix, coo_matrix, lil_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 from skimage.filters import gaussian
@@ -60,8 +61,14 @@ def __mint(component_1: Set[Tuple[int, int]],
     return min(int_1 + tau(component_1), int_2 + tau(component_2))
 
 
-def __segmentate(img: ndarray, theta_ss: float) -> List[Set[Tuple[int, int]]]:
-    img = gaussian(img, sigma=1.5)
+def __segmentate(img: ndarray, theta_ss: float, use_bilateral_filter: bool = False) -> List[Set[Tuple[int, int]]]:
+    if use_bilateral_filter:
+        img = cv2.bilateralFilter(np.uint8((img / np.max(img)) * 255), 9, 75, 75)
+        img = img / 255
+        img = gaussian(img, sigma=1.0)
+    else:
+        img = gaussian(img, sigma=1.5)
+    # img = gaussian(img, sigma=1.5)
     weights = __generate_weight_matrix(img)
     weights_csr = weights.tocsr()
     weights_coo: coo_matrix = weights.tocoo()
@@ -94,13 +101,15 @@ def __segmentate(img: ndarray, theta_ss: float) -> List[Set[Tuple[int, int]]]:
     return list(S.iter_sets())
 
 
-def image_2_foundation(img: ndarray, theta_ss: float = 1.0) -> SuperpixelStradlingFoundation:
+def image_2_foundation(img: ndarray,
+                       theta_ss: float = 1.0,
+                       use_bilateral_filter: bool = False) -> SuperpixelStradlingFoundation:
     r, c, _ = img.shape
     factor = 1.0
     if r * c > (128 ** 2):
         factor = ((128.0 ** 2.0) / float(r * c)) ** 0.5
         img = rescale(img, (factor, factor, 1.0))
-    return SuperpixelStradlingFoundation(__segmentate(img, theta_ss), factor)
+    return SuperpixelStradlingFoundation(__segmentate(img, theta_ss, use_bilateral_filter), factor)
 
 
 def get_objectness(foundation: SuperpixelStradlingFoundation,

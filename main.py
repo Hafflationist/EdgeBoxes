@@ -17,7 +17,7 @@ import numpy as np
 
 from numpy.core.multiarray import ndarray
 from multiprocessing import Pool
-from typing import Tuple, Any, List, Set
+from typing import Tuple, List, Set
 
 
 def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int) -> None:
@@ -102,7 +102,8 @@ def process_proposal_group(image_id: int,
                            weights: Tuple[float, float, float, float],
                            theta_cc: float,
                            theta_ms: float,
-                           theta_ss: float) -> List[dict]:
+                           theta_ss: float,
+                           use_bilateral_filter: bool) -> List[dict]:
     img = cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     if img is None:
         print("Image COCO_val2014_{0}.jpg not found!".format(str(image_id).zfill(12)))
@@ -119,7 +120,7 @@ def process_proposal_group(image_id: int,
         ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
         print("ms_foundation calculated!")
     if abs(weights[3]) > 0.0001:
-        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss)
+        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss, use_bilateral_filter)
         print("ss_foundation calculated!")
 
     def new_proposal(old_proposal: dict):
@@ -171,17 +172,19 @@ def parallel_calc(proposals_path: str,
                   suffix: str,
                   theta_cc: float,
                   theta_ms: float,
-                  theta_ss: float) -> None:
+                  theta_ss: float,
+                  use_bilateral_filter: bool) -> None:
     with open(proposals_path) as file:
         data = json.load(file)[:proposals_nmax]
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
-    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float], float, float, float]]
+    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float], float, float, float, bool]]
     data_grouped = [(iid,
                      list(filter(lambda proposal: proposal['image_id'] == iid, data)),
                      weights,
                      theta_cc,
                      theta_ms,
-                     theta_ss)
+                     theta_ss,
+                     use_bilateral_filter)
                     for iid in image_ids]
     for group in data_grouped:
         print("Searching for image Image COCO_val2014_{0}.jpg".format(str(group[0]).zfill(12)))
@@ -194,7 +197,7 @@ def parallel_calc(proposals_path: str,
         json.dump(new_data_grouped, file)
 
 
-def parse_args() -> Tuple[str, int, int, str, float, float, float]:
+def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
     parser = argparse.ArgumentParser(description="Description for my parser")
     parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
     parser.add_argument("-n", "--nmax",
@@ -221,6 +224,10 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float]:
                         help="Learned parameter for SS (0.0 < theta_ss < 2.0)",
                         required=False,
                         default="1.0")
+    parser.add_argument("-u", "--use_bilateral_filter",
+                        help="If set to TRUE, SS will use the bilateral filter",
+                        required=False,
+                        default="False")
 
     argument = parser.parse_args()
     assert (-1 <= int(argument.cue) <= 3)
@@ -234,11 +241,12 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float]:
            argument.suffixofoutput, \
            float(argument.theta_cc), \
            float(argument.theta_ms), \
-           float(argument.theta_ss)
+           float(argument.theta_ss), \
+           bool(argument.use_bilateral_filter)
 
 
 def main() -> None:
-    proposals_path, proposals_nmax, cue, suffix, theta_cc, theta_ms, theta_ss = parse_args()
+    proposals_path, proposals_nmax, cue, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter = parse_args()
     print("searching for max {0} proposals in {1}".format(proposals_nmax, proposals_path))
     weights = (0.25, 0.25, 0.25, 0.25)
     if cue == 0:
@@ -249,21 +257,26 @@ def main() -> None:
         weights = (0.0, 0.0, 1.0, 0.0)
     elif cue == 3:
         weights = (0.0, 0.0, 0.0, 1.0)
-    parallel_calc(proposals_path, proposals_nmax, weights, suffix, theta_cc, theta_ms, theta_ss)
+    parallel_calc(proposals_path, proposals_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
     exit()
 
 
 if __name__ == '__main__':
-    main()
+    # main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
-    test_img = cv2.imread("assets/testImage_kubus.jpg")
-    # test_img = rescale(cv2.imread("assets/testImage_strand.jpg"), (0.3, 0.3, 1.0))
+    # test_img = cv2.imread("assets/testImage_batterien.jpg")
+    test_img = cv2.imread("assets/testImage_batterien.jpg")
+    r, c, _ = test_img.shape
+    factor = 1.0
+    if r * c > (256 ** 2):
+        factor = ((128.0 ** 2.0) / float(r * c)) ** 0.5
+        test_img = rescale(test_img, (factor, factor, 1.0))
+    test_img = cv2.bilateralFilter(np.uint8((test_img / np.max(test_img)) * 255), 9, 75, 75)
     # test_img = rescale(cv2.imread("assets/testImage_brutalismus.jpg"), (1.0, 1.0, 1.0))
     cv2.imshow("test_img", np.array(test_img))
-    cv2.imshow("test_img (blur)", gaussian(np.array(test_img), sigma=1.5))
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    S = ss.__segmentate(test_img)
+    S = ss.__segmentate(test_img, 1.0)
     seg_test = ssc.color_segmentation(test_img, S)
     cv2.imshow("seg_test", seg_test)
     cv2.waitKey(0)
