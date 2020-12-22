@@ -262,7 +262,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     # test_img = cv2.imread("assets/testImage_batterien.jpg")
     test_img = cv2.imread("assets/testImage_batterien.jpg")
