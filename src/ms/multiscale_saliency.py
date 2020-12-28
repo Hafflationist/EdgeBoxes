@@ -10,8 +10,8 @@ from src.ms.MultiscaleSaliencyFoundation import MultiscaleSaliencyFoundation
 
 def __calculate_one_channel(img_mono: ndarray) -> ndarray:
     complex_img = numpy.fft.fft2(img_mono)
-    img_phase = np.angle(complex_img)
-    img_freq = np.abs(complex_img)
+    img_phase: ndarray = np.angle(complex_img)
+    img_freq: ndarray = np.abs(complex_img)
     img_freq = np.log(img_freq)
     img_freq_smooth = convolve(img_freq, (np.ones((3, 3)) / 9.0), mode='reflect')
     img_freq_residual = (img_freq - img_freq_smooth)
@@ -30,14 +30,14 @@ def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
     # Selbst wenn man keine Größenveränderung braucht, muss hier resize stehen
     # Grund: unbekannt
     # Konsequenz beim Entfernen: IFFT funktioniert nicht wie erwartet
-    img = resize(img_orig, (16 * scale, 16 * scale))
-    img_red = np.array([[px[0] for px in row] for row in img])
-    img_green = np.array([[px[1] for px in row] for row in img])
-    img_blue = np.array([[px[2] for px in row] for row in img])
-    saliency_red = __calculate_one_channel(img_red)
-    saliency_green = __calculate_one_channel(img_green)
-    saliency_blue = __calculate_one_channel(img_blue)
-    saliency = (saliency_red + saliency_green + saliency_blue) / 3
+    img: ndarray = resize(img_orig, (16 * scale, 16 * scale))
+    img_red: ndarray = np.array([[px[0] for px in row] for row in img])
+    img_green: ndarray = np.array([[px[1] for px in row] for row in img])
+    img_blue: ndarray = np.array([[px[2] for px in row] for row in img])
+    saliency_red: ndarray = __calculate_one_channel(img_red)
+    saliency_green: ndarray = __calculate_one_channel(img_green)
+    saliency_blue: ndarray = __calculate_one_channel(img_blue)
+    saliency: ndarray = (saliency_red + saliency_green + saliency_blue) / 3
     return resize(saliency, (img_orig.shape[0], img_orig.shape[1]))
 
 

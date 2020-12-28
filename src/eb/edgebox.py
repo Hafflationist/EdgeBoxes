@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -11,7 +11,7 @@ from src.eb.EdgeboxFoundation import EdgeboxFoundation
 from src.utils.utils import get_n8
 
 
-def detect_edges(img):
+def detect_edges(img: ndarray) -> Tuple[ndarray, ndarray]:
     img_processed = (img / np.max(img)).astype(np.float32)
     modelFilename = "model/model.yml.gz"
     pDollar = cv2.ximgproc.createStructuredEdgeDetection(modelFilename)
@@ -26,15 +26,15 @@ def detect_edges(img):
 # 2. group id
 # returns list<list<[int, int]>>     (Matrix of [edge, group id])
 #       * list<list<int*int>>        (List of all group members(coords))
-def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
+def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray) -> Tuple[ndarray, ndarray]:
 
-    def get_new_todo(matrix: ndarray):
+    def get_new_todo(matrix: ndarray) -> Tuple[int, int]:
         todo = [coord for coord in coords_of_edges if matrix[coord[0], coord[1], 1] == -1]
         if len(todo) == 0:
             return -1, -1
         return todo[0]
 
-    def get_next_todo(matrix: ndarray, curr_r_idx: int, curr_p_idx: int):
+    def get_next_todo(matrix: ndarray, curr_r_idx: int, curr_p_idx: int) -> Tuple[int, int]:
         root_coord = groups_members[edges_with_grouping[curr_r_idx][curr_p_idx][1]][0]
         for (ro, pi) in sorted(get_n8(matrix, curr_r_idx, curr_p_idx),
                                key=lambda coord: ((coord[0] - root_coord[0])**2 + (coord[1] - root_coord[1])**2)):
@@ -48,8 +48,8 @@ def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
     edges_nms[edges_nms >= 0.1] = 1.0   # thresholding
     edges_nms = np.uint8(edges_nms)
     new_group_id: int = 0
-    groups_diff_cum: list = []          # list<float>
-    groups_members: list = []           # list<list<int*int>>
+    groups_diff_cum: List[float] = []
+    groups_members: List[List[List[int]]] = []
     edges_with_grouping = np.array([[[edges_nms[row_idx, px_idx], -1]
                                      for px_idx in range(len(edges_nms[0]))]
                                     for row_idx in range(len(edges_nms))])
@@ -64,7 +64,7 @@ def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
         if row_idx == -1 or px_idx == -1:
             break
 
-        new_group_id_candidate = new_group_id
+        new_group_id_candidate: int = new_group_id
         # check N8 neighborhood
         px_orientation = orientation_map[row_idx, px_idx]
         for (r, p) in get_n8(edges_nms, row_idx, px_idx):
@@ -72,7 +72,7 @@ def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
                     or edges_with_grouping[r][p][1] == -1 \
                     or groups_diff_cum[edges_with_grouping[r][p][1]] > (half_pi * 2.0):     # TODO Hier sollte man nicht verdoppeln
                 continue
-            current_diff = abs(px_orientation - orientation_map[r, p])
+            current_diff: float = abs(px_orientation - orientation_map[r, p])
             current_diff = min(math.pi - current_diff, current_diff)  # difference in a circle
             new_group_id_candidate = edges_with_grouping[r][p][1]
             # update group information...
@@ -95,9 +95,10 @@ def group_edges(edges_nms_orig: ndarray, orientation_map: ndarray):
 
 # returns list<list<float>> (Adjazenzmatrix)
 def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
-    def mean_of_coords(idx: int) -> (float, float):
+    def mean_of_coords(idx: int) -> ndarray:
         rows = [coord[0] for coord in groups_members[idx]]
         columns = [coord[1] for coord in groups_members[idx]]
+        # Falls Zeit übrig: Investigieren, weshalb hier np.array steht, statt einfach ein Paar zurück zu geben
         return np.array([sum(rows) / len(rows), sum(columns) / len(columns)])
 
     def mean_of_orientations(idx: int) -> float:
@@ -118,7 +119,7 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
         return (np.arctan(coord_diff[0]/coord_diff[1]) + (math.pi / 2.0)) / math.pi
 
     def calc_distance(group_id_1: int, group_id_2: int) -> float:
-        distance = 10
+        distance = 10.0
         if(groups_min_row_idx[group_id_1] - groups_max_row_idx[group_id_2] > distance
                 or groups_min_row_idx[group_id_2] - groups_max_row_idx[group_id_1] > distance
                 or groups_min_col_idx[group_id_1] - groups_max_col_idx[group_id_2] > distance
@@ -128,8 +129,8 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
         mean_2 = groups_mean_position[group_id_2]
         c_with_d_1 = [(r, p, (r - mean_2[0])**2 + (p - mean_2[1])**2) for (r, p) in groups_members[group_id_1]]
         c_with_d_2 = [(r, p, (r - mean_1[0])**2 + (p - mean_1[1])**2) for (r, p) in groups_members[group_id_2]]
-        nearest_1 = sorted(c_with_d_1, key=lambda triple: triple[2])[0]
-        nearest_2 = sorted(c_with_d_2, key=lambda triple: triple[2])[0]
+        nearest_1: Tuple[int, int, float] = sorted(c_with_d_1, key=lambda triple: triple[2])[0]
+        nearest_2: Tuple[int, int, float] = sorted(c_with_d_2, key=lambda triple: triple[2])[0]
         return (nearest_1[0] - nearest_2[0])**2 + (nearest_1[1] - nearest_2[1])**2
 
     def calculate_affinity(group_id_1: int, group_id_2: int) -> float:
@@ -140,9 +141,9 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
             return 0.0
         pos_1 = groups_mean_position[group_id_1]
         pos_2 = groups_mean_position[group_id_2]
-        theta_12 = calc_angle_between_points((pos_1[0], pos_1[1]), (pos_2[0], pos_2[1]))
-        theta_1 = groups_mean_orientation[group_id_1]
-        theta_2 = groups_mean_orientation[group_id_2]
+        theta_12: float = calc_angle_between_points((pos_1[0], pos_1[1]), (pos_2[0], pos_2[1]))
+        theta_1: float = groups_mean_orientation[group_id_1]
+        theta_2: float = groups_mean_orientation[group_id_2]
         aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25  #** 2.0 TODO Eigentlich sollte hier quadriert werden
         if aff <= 0.05:
             return 0.0
@@ -162,8 +163,8 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
     #                   for px_idx in range(len(edges_with_grouping[0]))]
     #                  for row_idx in range(len(edges_with_grouping))])
 
-    number_of_groups = len(groups_members)
-    affinities = np.zeros(shape=(number_of_groups, number_of_groups))
+    number_of_groups: int = len(groups_members)
+    affinities: ndarray = np.zeros(shape=(number_of_groups, number_of_groups))
     for group_id_row in range(number_of_groups):
         for group_id_column in range(number_of_groups):  # range(group_id_row, number_of_groups):
             affinities[group_id_row, group_id_column] = calculate_affinity(group_id_row, group_id_column)

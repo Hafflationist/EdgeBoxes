@@ -16,7 +16,7 @@ def find_idx_of_element(partitioning: List[Set[Tuple[int, int]]], element: Tuple
 
 def color_segmentation(img: ndarray, S: List[Set[Tuple[int, int]]]) -> ndarray:
     def calculate_pixel(row_idx, px_idx):
-        hue = partitions_color[find_idx_of_element(S, (row_idx, px_idx))]
+        hue: float = partitions_color[find_idx_of_element(S, (row_idx, px_idx))]
         rgb = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
         return [rgb[0], rgb[1], rgb[2], 1.0]
 

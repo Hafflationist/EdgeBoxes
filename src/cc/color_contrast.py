@@ -12,9 +12,9 @@ def __histogram_of_windows(img: ndarray, left: int, top: int, right: int, bottom
     return hist, bins
 
 
-def __chi_square_distance(hist_1: ndarray, hist_2: ndarray):
+def __chi_square_distance(hist_1: ndarray, hist_2: ndarray) -> float:
     def addend(pair):
-        divisor = (pair[0] + pair[1])
+        divisor: float = (pair[0] + pair[1])
         if divisor == 0.0:
             divisor = 0.0000001
         return ((pair[0] - pair[1]) ** 2) / divisor
@@ -38,14 +38,14 @@ def get_objectness(foundation: ColorContrastFoundation,
     half_delta_width: int = int(width * theta_cc - width) // 2
     half_delta_height: int = int(height * theta_cc - height) // 2
 
-    left_surr = max(left - half_delta_width, 0)
-    top_surr = max(top - half_delta_height, 0)
-    right_surr = min(right + half_delta_width, len(foundation.img_lab[0]) - 1)
-    bottom_surr = max(bottom + half_delta_height, 0)
+    left_surr: int = max(left - half_delta_width, 0)
+    top_surr: int = max(top - half_delta_height, 0)
+    right_surr: int = min(right + half_delta_width, len(foundation.img_lab[0]) - 1)
+    bottom_surr: int = max(bottom + half_delta_height, 0)
 
-    img_l = np.array([[px[0] for px in row] for row in foundation.img_lab])
-    img_a = np.array([[px[1] for px in row] for row in foundation.img_lab])
-    img_b = np.array([[px[2] for px in row] for row in foundation.img_lab])
+    img_l: ndarray = np.array([[px[0] for px in row] for row in foundation.img_lab])
+    img_a: ndarray = np.array([[px[1] for px in row] for row in foundation.img_lab])
+    img_b: ndarray = np.array([[px[2] for px in row] for row in foundation.img_lab])
 
     img_l_hist = np.array(__histogram_of_windows(img_l, left, top, right, bottom))
     img_l_surr_hist = __histogram_of_windows(img_l, left_surr, top_surr, right_surr, bottom_surr)
@@ -54,7 +54,7 @@ def get_objectness(foundation: ColorContrastFoundation,
     img_b_hist = __histogram_of_windows(img_b, left, top, right, bottom)
     img_b_surr_hist = __histogram_of_windows(img_b, left_surr, top_surr, right_surr, bottom_surr)
 
-    chi_l = __chi_square_distance(img_l_hist[0], img_l_surr_hist[0])
-    chi_a = __chi_square_distance(img_a_hist[0], img_a_surr_hist[0])
-    chi_b = __chi_square_distance(img_b_hist[0], img_b_surr_hist[0])
+    chi_l: float = __chi_square_distance(img_l_hist[0], img_l_surr_hist[0])
+    chi_a: float = __chi_square_distance(img_a_hist[0], img_a_surr_hist[0])
+    chi_b: float = __chi_square_distance(img_b_hist[0], img_b_surr_hist[0])
     return chi_a + chi_b + chi_l

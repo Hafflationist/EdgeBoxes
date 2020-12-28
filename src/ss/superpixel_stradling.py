@@ -42,8 +42,7 @@ def __int(component: Set[Tuple[int, int]], img_shape: (int, int), weights: csr_m
     weight_coords = np.array([pair[0] * columns + pair[1] for pair in component])
     sub_weights_matrix = weights[weight_coords, :][:, weight_coords]
     mst = minimum_spanning_tree(csgraph=sub_weights_matrix)
-    result = csr_matrix.max(mst)
-    return result
+    return csr_matrix.max(mst)
 
 
 def __mint(component_1: Set[Tuple[int, int]],
@@ -68,9 +67,8 @@ def __segmentate(img: ndarray, theta_ss: float, use_bilateral_filter: bool = Fal
         img = gaussian(img, sigma=1.0)
     else:
         img = gaussian(img, sigma=1.5)
-    # img = gaussian(img, sigma=1.5)
-    weights = __generate_weight_matrix(img)
-    weights_csr = weights.tocsr()
+    weights: lil_matrix = __generate_weight_matrix(img)
+    weights_csr: csr_matrix = weights.tocsr()
     weights_coo: coo_matrix = weights.tocoo()
     edge_list: Iterable[(int, int, float)] = zip(weights_coo.row, weights_coo.col, weights_coo.data)
     edge_list_sorted: List[Tuple[int, int, float]] = sorted(edge_list, key=lambda triplet: triplet[2])
