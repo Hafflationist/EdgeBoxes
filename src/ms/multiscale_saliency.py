@@ -15,6 +15,7 @@ def __calculate_one_channel(img_mono: ndarray) -> ndarray:
     img_freq = np.log(img_freq)
     img_freq_smooth = convolve(img_freq, (np.ones((3, 3)) / 9.0), mode='reflect')
     img_freq_residual = (img_freq - img_freq_smooth)
+    # TODO Falls noch Zeit ist, muss man hier schauen, ob man wegen des Paddings nicht vllt fftshift anwenden sollte
     result = np.abs(np.real(numpy.fft.ifft2(np.exp(img_freq_residual) * np.exp(img_phase * 1.0j)))) ** 2.0
     # Folgendes muss passieren, um Kantensalienz zu beseitigen
     result[0, :] = 0
