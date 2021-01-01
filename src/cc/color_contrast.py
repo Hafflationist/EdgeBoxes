@@ -47,7 +47,7 @@ def get_objectness(foundation: ColorContrastFoundation,
     img_a: ndarray = np.array([[px[1] for px in row] for row in foundation.img_lab])
     img_b: ndarray = np.array([[px[2] for px in row] for row in foundation.img_lab])
 
-    img_l_hist = np.array(__histogram_of_windows(img_l, left, top, right, bottom))
+    img_l_hist = __histogram_of_windows(img_l, left, top, right, bottom)
     img_l_surr_hist = __histogram_of_windows(img_l, left_surr, top_surr, right_surr, bottom_surr)
     img_a_hist = __histogram_of_windows(img_a, left, top, right, bottom)
     img_a_surr_hist = __histogram_of_windows(img_a, left_surr, top_surr, right_surr, bottom_surr)
