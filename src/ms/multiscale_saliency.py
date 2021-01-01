@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import numpy.fft
 from numpy.core.multiarray import ndarray
@@ -52,7 +54,7 @@ def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
 def get_objectness(foundation: MultiscaleSaliencyFoundation,
                    mask_coords: ndarray,
                    theta_ms: float = 0.0,
-                   learned: bool = False) -> float:
+                   learned: bool = False) -> Tuple[float, float, float]:
     if not learned:
         theta_ms = 2.0 / 3.0
 
@@ -65,4 +67,4 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
     scale_1_obj = scale_specific(foundation.saliency_1)
     scale_2_obj = scale_specific(foundation.saliency_2)
     scale_3_obj = scale_specific(foundation.saliency_3)
-    return max(scale_1_obj, scale_2_obj, scale_3_obj)
+    return scale_1_obj, scale_2_obj, scale_3_obj

@@ -83,19 +83,21 @@ def process_single_proposal(proposal: dict,
                             ss_foundation: SuperpixelStradlingFoundation,
                             weights: Tuple[float, float, float, float],
                             theta_cc: float,
-                            theta_ms: float) -> Tuple[float, float, float, float]:
+                            theta_ms: float) -> Tuple[float, float, float, float, float, float]:
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
-    cc_objectness, eb_objectness, ms_objectness, ss_objectness = 0.0, 0.0, 0.0, 0.0
+    cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness = \
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     if abs(weights[0]) > 0.0001:
         cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom, theta_cc)
     if abs(weights[1]) > 0.0001:
         eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     if abs(weights[2]) > 0.0001:
-        ms_objectness = ms.get_objectness(ms_foundation, mask, theta_ms, learned=True)
+        ms_objectness_1, ms_objectness_2, ms_objectness_3 = \
+            ms.get_objectness(ms_foundation, mask, theta_ms, learned=True)
     if abs(weights[3]) > 0.0001:
         ss_objectness = ss.get_objectness(ss_foundation, mask)
 
-    return cc_objectness, eb_objectness, ms_objectness, ss_objectness
+    return cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness
 
 
 def process_proposal_group(image_id: int,
@@ -124,18 +126,20 @@ def process_proposal_group(image_id: int,
         ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss, use_bilateral_filter)
         print("ss_foundation calculated!")
 
-    def new_proposal(old_proposal: dict):
-        cc_objectness, eb_objectness, ms_objectness, ss_objectness = process_single_proposal(old_proposal,
-                                                                                             cc_foundation,
-                                                                                             eb_foundation,
-                                                                                             ms_foundation,
-                                                                                             ss_foundation,
-                                                                                             weights,
-                                                                                             theta_cc,
-                                                                                             theta_ms)
-        return old_proposal, cc_objectness, eb_objectness, ms_objectness, ss_objectness
+    def new_proposal(old_proposal: dict) -> Tuple[dict, float, float, float, float, float, float]:
+        cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness = \
+            process_single_proposal(old_proposal,
+                                    cc_foundation,
+                                    eb_foundation,
+                                    ms_foundation,
+                                    ss_foundation,
+                                    weights,
+                                    theta_cc,
+                                    theta_ms)
+        return old_proposal, \
+               cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness
 
-    new_proposals = list(map(new_proposal, proposals))
+    new_proposals: List[Tuple[dict, float, float, float, float, float, float]] = list(map(new_proposal, proposals))
 
     def min_max_from_idx(idx: int) -> Tuple[float, float]:
         objn_list = list(map(lambda p: p[idx], new_proposals))
@@ -148,10 +152,12 @@ def process_proposal_group(image_id: int,
     eb_objn_list_min, eb_objn_list_max = min_max_from_idx(2)
     ms_objn_list_min, ms_objn_list_max = min_max_from_idx(3)
     ss_objn_list_min, ss_objn_list_max = min_max_from_idx(4)
-    for proposal, cc_objn, eb_objn, ms_objn, ss_objn in new_proposals:
+    for proposal, cc_objn, eb_objn, ms_objn_1, ms_objn_2, ms_objn_3, ss_objn in new_proposals:
         cc_objn_eq = equalize(cc_objn, cc_objn_list_min, cc_objn_list_max) * weights[0]
         eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
-        ms_objn_eq = equalize(ms_objn, ms_objn_list_min, ms_objn_list_max) * weights[2]
+        ms_objn_1_eq = equalize(ms_objn_1, ms_objn_list_min, ms_objn_list_max) * weights[2]
+        ms_objn_2_eq = equalize(ms_objn_2, ms_objn_list_min, ms_objn_list_max) * weights[2]
+        ms_objn_3_eq = equalize(ms_objn_3, ms_objn_list_min, ms_objn_list_max) * weights[2]
         ss_objn_eq = equalize(ss_objn, ss_objn_list_min, ss_objn_list_max) * weights[3]
         final_objn = 0.0
         if abs(weights[0]) > 0.0001:
@@ -159,7 +165,7 @@ def process_proposal_group(image_id: int,
         if abs(weights[1]) > 0.0001:
             final_objn += eb_objn_eq
         if abs(weights[2]) > 0.0001:
-            final_objn += ms_objn_eq
+            final_objn += max(ms_objn_1_eq, ms_objn_2_eq, ms_objn_3_eq)
         if abs(weights[3]) > 0.0001:
             final_objn += ss_objn_eq
         proposal['objn'] = final_objn
@@ -268,8 +274,6 @@ if __name__ == '__main__':
     # test_img = cv2.imread("assets/testImage_batterien.jpg")
     # test_img = cv2.imread("assets/testImage_bahn.jpg")
     # cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
-
-
 
     test_img = cv2.imread("assets/testImage_giraffe.jpg")
     original_shape = test_img.shape
