@@ -45,10 +45,9 @@ def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
 
 
 def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
-    original_shape = img.shape
-    return MultiscaleSaliencyFoundation(resize(__calculate_multiscale_saliency(img, 1), original_shape),
-                                        resize(__calculate_multiscale_saliency(img, 2), original_shape),
-                                        resize(__calculate_multiscale_saliency(img, 3), original_shape))
+    return MultiscaleSaliencyFoundation(__calculate_multiscale_saliency(img, 1),
+                                        __calculate_multiscale_saliency(img, 2),
+                                        __calculate_multiscale_saliency(img, 3))
 
 
 def get_objectness(foundation: MultiscaleSaliencyFoundation,
@@ -60,7 +59,7 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
 
     def scale_specific(saliency: ndarray) -> float:
         mask_values = np.array(list(map(lambda idx: saliency[idx[0], idx[1]], mask_coords)))
-        mask_values_filtered = list(filter(lambda p: p >= np.max(saliency) * theta_ms, mask_values))
+        mask_values_filtered = list(filter(lambda p: p >= (np.max(saliency) * theta_ms), mask_values))
         mask_n = len(mask_coords)
         return np.sum(mask_values_filtered) * float(len(mask_values_filtered) / float(mask_n))
 
