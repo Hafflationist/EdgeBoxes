@@ -146,6 +146,8 @@ def process_proposal_group(image_id: int,
         return np.min(objn_list), np.max(objn_list)
 
     def equalize(value: float, value_min: float, value_max: float) -> float:
+        if value_max == value_min:
+            return -1.0
         return (value - value_min) / (value_max - value_min)
 
     cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)

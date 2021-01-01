@@ -41,7 +41,7 @@ def get_objectness(foundation: ColorContrastFoundation,
     left_surr: int = max(left - half_delta_width, 0)
     top_surr: int = max(top - half_delta_height, 0)
     right_surr: int = min(right + half_delta_width, len(foundation.img_lab[0]) - 1)
-    bottom_surr: int = max(bottom + half_delta_height, 0)
+    bottom_surr: int = max(bottom + half_delta_height, len(foundation.img_lab) - 1)
 
     img_l: ndarray = np.array([[px[0] for px in row] for row in foundation.img_lab])
     img_a: ndarray = np.array([[px[1] for px in row] for row in foundation.img_lab])
