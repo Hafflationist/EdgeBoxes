@@ -5,4 +5,6 @@ from numpy.core.multiarray import ndarray
 
 @dataclass
 class MultiscaleSaliencyFoundation:
-    saliency: ndarray
+    saliency_1: ndarray
+    saliency_2: ndarray
+    saliency_3: ndarray

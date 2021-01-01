@@ -6,6 +6,7 @@ import json
 import sys
 
 from skimage.filters import gaussian
+from skimage.transform import resize
 from src.attentionmask.mask import decode
 from skimage.transform import rescale
 
@@ -265,54 +266,22 @@ if __name__ == '__main__':
     main()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     # test_img = cv2.imread("assets/testImage_batterien.jpg")
-    test_img = cv2.imread("assets/testImage_bahn.jpg")
-    r, c, _ = test_img.shape
-    factor = 1.0
-    if r * c > (256 ** 2):
-        factor = ((128.0 ** 2.0) / float(r * c)) ** 0.5
-        test_img = rescale(test_img, (factor, factor, 1.0))
-    test_img = cv2.bilateralFilter(np.uint8((test_img / np.max(test_img)) * 255), 9, 75, 75)
-    # test_img = rescale(cv2.imread("assets/testImage_brutalismus.jpg"), (1.0, 1.0, 1.0))
-    cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    S = ss.__segmentate(test_img, 0.12, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test0", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
-    S = ss.__segmentate(test_img, 0.25, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test1", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
-    S = ss.__segmentate(test_img, 0.5, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test2", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
-    S = ss.__segmentate(test_img, 1.0, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test3", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
-    S = ss.__segmentate(test_img, 2.0, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test4", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
-    S = ss.__segmentate(test_img, 4.0, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test5", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
-    S = ss.__segmentate(test_img, 8.0, True)
-    seg_test = ssc.color_segmentation(test_img, S)
-    cv2.imshow("seg_test6", np.array(rescale(seg_test, (1.0/factor, 1.0/factor, 1.0))))
+    # test_img = cv2.imread("assets/testImage_bahn.jpg")
+    # cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
+
+
+
+    test_img = cv2.imread("assets/testImage_giraffe.jpg")
+    original_shape = test_img.shape
+    saliency = ms.__calculate_multiscale_saliency(test_img, 1)
+    cv2.imshow("saliency1", resize(saliency, original_shape))
+    saliency = ms.__calculate_multiscale_saliency(test_img, 2)
+    cv2.imshow("saliency2", resize(saliency, original_shape))
+    saliency = ms.__calculate_multiscale_saliency(test_img, 3)
+    cv2.imshow("saliency3", resize(saliency, original_shape))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-    # exit()
-    #
-    # test_img = cv2.imread("assets/testImage_giraffe.jpg")
-    # original_shape = test_img.shape
-    # saliency = ms.calculate_multiscale_saliency(test_img, 1)
-    # cv2.imshow("saliency1", resize(saliency, original_shape))
-    # saliency = ms.calculate_multiscale_saliency(test_img, 2)
-    # cv2.imshow("saliency2", resize(saliency, original_shape))
-    # saliency = ms.calculate_multiscale_saliency(test_img, 3)
-    # cv2.imshow("saliency3", resize(saliency, original_shape))
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    # exit()
+    exit()
 
     # test_img = cv2.imread("assets/testImage_schreibtisch.jpg")
     # do_things_with_visualizations(test_img, 0, 40, 550, 150)
