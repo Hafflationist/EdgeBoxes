@@ -280,7 +280,9 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    # main()
+    main()
+
+
     test_img = cv2.imread("assets/testImage_kantendetektion.png")
     do_things_with_visualizations(test_img, 350, 350, 550, 600)
     exit()
