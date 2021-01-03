@@ -25,9 +25,14 @@ def color_edges(edges_nms: ndarray, orientation_map: ndarray):
 
 
 # returns RGB-image
-def color_grouped_edges(edges_with_grouping: ndarray, groups_members: ndarray, edges_nms: ndarray):
+def color_grouped_edges(edges_with_grouping: ndarray,
+                        groups_members: ndarray,
+                        edges_nms: ndarray,
+                        brightness_by_magnitude: bool):
     def get_summed_magnitude(matrix: ndarray, members) -> float:
         mag_sum = 0.0
+        if not brightness_by_magnitude:
+            return 1.0
         for (row_idx, px_idx) in members:
             mag_sum += matrix[row_idx, px_idx]
         return mag_sum
@@ -59,9 +64,15 @@ def add_visual_box(img_orig: ndarray, left: int, top: int, right: int, bottom: i
     return img
 
 
-def color_weights(edges_with_grouping: ndarray, groups_members: ndarray, edges_nms: ndarray, w: ndarray):
+def color_weights(edges_with_grouping: ndarray,
+                  groups_members: ndarray,
+                  edges_nms: ndarray,
+                  w: ndarray,
+                  brightness_by_magnitude: bool):
     def get_summed_magnitude(matrix: ndarray, members) -> float:
         mag_sum = 0.0
+        if not brightness_by_magnitude:
+            return 1.0
         for (row_idx, px_idx) in members:
             mag_sum += matrix[row_idx, px_idx]
         return mag_sum

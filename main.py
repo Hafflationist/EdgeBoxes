@@ -26,6 +26,7 @@ def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int,
     edges_nms, orientation_map = eb.detect_edges(img)
     a = datetime.datetime.now()
     print("detect_edges:\t" + str(a - b2))
+    cv2.imshow("edges_nms", edges_nms)
 
     b = datetime.datetime.now()
     edges_nms_grouped, groups_members = eb.group_edges(edges_nms, orientation_map)
@@ -37,22 +38,30 @@ def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int,
     a = datetime.datetime.now()
     print("affinities:\t\t" + str(a - b))
     # cv2.imshow("affinities", affinities)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
-    edges_nms_grouped_colored = ebc.color_grouped_edges(edges_nms_grouped, groups_members, edges_nms)
-    cv2.imshow("nms grouped (colored)", edges_nms_grouped_colored)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # edges_nms_grouped_colored = ebc.color_grouped_edges(edges_nms_grouped, groups_members, edges_nms, False)
+    # cv2.imshow("nms grouped (colored, without magnitude)", edges_nms_grouped_colored)
+    # edges_nms_grouped_colored = ebc.color_grouped_edges(edges_nms_grouped, groups_members, edges_nms, True)
+    # cv2.imshow("nms grouped (colored with magnitude)", edges_nms_grouped_colored)
 
     colored_weights = ebc.add_visual_box(
         ebc.color_weights(
             edges_nms_grouped, groups_members, edges_nms,
-            eb.get_weights(edges_nms_grouped, groups_members, affinities, left, top, right, bottom)
+            eb.get_weights(edges_nms_grouped, groups_members, affinities, left, top, right, bottom),
+            True
         ),
         left, top, right, bottom
     )
-    cv2.imshow("colored_weights", colored_weights)
+    cv2.imshow("colored_weights (with mag)", colored_weights)
+    colored_weights = ebc.add_visual_box(
+        ebc.color_weights(
+            edges_nms_grouped, groups_members, edges_nms,
+            eb.get_weights(edges_nms_grouped, groups_members, affinities, left, top, right, bottom),
+            False
+        ),
+        left, top, right, bottom
+    )
+    cv2.imshow("colored_weights (without mag)", colored_weights)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -271,7 +280,10 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    test_img = cv2.imread("assets/testImage_kantendetektion.png")
+    do_things_with_visualizations(test_img, 350, 350, 550, 600)
+    exit()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     # test_img = cv2.imread("assets/testImage_batterien.jpg")
     # test_img = cv2.imread("assets/testImage_bahn.jpg")
