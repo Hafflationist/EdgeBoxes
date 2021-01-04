@@ -105,6 +105,7 @@ def process_single_proposal(proposal: dict,
             ms.get_objectness(ms_foundation, mask, theta_ms, learned=True)
     if abs(weights[3]) > 0.0001:
         ss_objectness = ss.get_objectness(ss_foundation, mask)
+        print("ss_objn: {}".format(ss_objectness))
 
     return cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness
 
@@ -161,14 +162,17 @@ def process_proposal_group(image_id: int,
 
     cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)
     eb_objn_list_min, eb_objn_list_max = min_max_from_idx(2)
-    ms_objn_list_min, ms_objn_list_max = min_max_from_idx(3)
-    ss_objn_list_min, ss_objn_list_max = min_max_from_idx(4)
+    ms_objn_1_list_min, ms_objn_1_list_max = min_max_from_idx(3)
+    ms_objn_2_list_min, ms_objn_2_list_max = min_max_from_idx(4)
+    ms_objn_3_list_min, ms_objn_3_list_max = min_max_from_idx(5)
+    ss_objn_list_min, ss_objn_list_max = min_max_from_idx(6)
+    print("ss_objn_list_min = {}\t|\t ss_objn_list_max = {}".format(ss_objn_list_min, ss_objn_list_max))
     for proposal, cc_objn, eb_objn, ms_objn_1, ms_objn_2, ms_objn_3, ss_objn in new_proposals:
         cc_objn_eq = equalize(cc_objn, cc_objn_list_min, cc_objn_list_max) * weights[0]
         eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
-        ms_objn_1_eq = equalize(ms_objn_1, ms_objn_list_min, ms_objn_list_max) * weights[2]
-        ms_objn_2_eq = equalize(ms_objn_2, ms_objn_list_min, ms_objn_list_max) * weights[2]
-        ms_objn_3_eq = equalize(ms_objn_3, ms_objn_list_min, ms_objn_list_max) * weights[2]
+        ms_objn_1_eq = equalize(ms_objn_1, ms_objn_1_list_min, ms_objn_1_list_max) * weights[2]
+        ms_objn_2_eq = equalize(ms_objn_2, ms_objn_2_list_min, ms_objn_2_list_max) * weights[2]
+        ms_objn_3_eq = equalize(ms_objn_3, ms_objn_3_list_min, ms_objn_3_list_max) * weights[2]
         ss_objn_eq = equalize(ss_objn, ss_objn_list_min, ss_objn_list_max) * weights[3]
         final_objn = 0.0
         if abs(weights[0]) > 0.0001:
