@@ -60,7 +60,7 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
     def scale_specific(saliency: ndarray) -> float:
         mask_values = np.array(list(map(lambda idx: saliency[idx[0], idx[1]], mask_coords)))
         max_post = np.max(saliency) * theta_ms
-        mask_values_filtered = list(filter(lambda p: p >= max_post), mask_values))
+        mask_values_filtered = list(filter(lambda p: p >= max_post, mask_values))
         mask_n = len(mask_coords)
         return np.sum(mask_values_filtered) * float(len(mask_values_filtered) / float(mask_n))
 
