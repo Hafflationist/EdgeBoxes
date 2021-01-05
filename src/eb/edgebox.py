@@ -228,7 +228,9 @@ def get_objectness(foundation: EdgeboxFoundation,
                     left, top, right, bottom)
     h = np.sum(list(map(lambda group_id: w[group_id] * sum_of_magnitudes[group_id], groups_in_box)))
     h /= 2 * (((right - left) + (bottom - top)) ** 1.5)
-
+    # TODO: Grober Fehler entdeck! "sub" sollte durch eine kleinere Box berechnet werden!
+    # Entweder der Fehler wird korrigiert oder die zweite Berechnungsmethode wird nicht mehr angeboten.
+    # Immerhin stehen bereits einige andere zur Verfügung
     relevant_for_sub = filter(lambda group_id: w[group_id] < 1.0, groups_in_box)
     sub = np.sum(list(map(lambda group_id: sum_of_magnitudes[group_id] * (1.0 - w[group_id]), relevant_for_sub)))
     sub /= 2 * (((right - left) + (bottom - top)) ** 1.5)
