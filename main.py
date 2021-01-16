@@ -166,7 +166,7 @@ def process_proposal_group(image_id: int,
     ms_objn_2_list_min, ms_objn_2_list_max = min_max_from_idx(4)
     ms_objn_3_list_min, ms_objn_3_list_max = min_max_from_idx(5)
     ss_objn_list_min, ss_objn_list_max = min_max_from_idx(6)
-    print("ss_objn_list_min = {}\t|\t ss_objn_list_max = {}".format(ss_objn_list_min, ss_objn_list_max))
+    print("cc_objn_list_min = {}\t|\t cc_objn_list_max = {}".format(cc_objn_list_min, cc_objn_list_max))
     for proposal, cc_objn, eb_objn, ms_objn_1, ms_objn_2, ms_objn_3, ss_objn in new_proposals:
         cc_objn_eq = equalize(cc_objn, cc_objn_list_min, cc_objn_list_max) * weights[0]
         eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
@@ -189,7 +189,7 @@ def process_proposal_group(image_id: int,
 
 
 def parallel_calc(proposals_path: str,
-                  proposals_nmax: int,
+                  images_nmax: int,
                   weights: Tuple[float, float, float, float],
                   suffix: str,
                   theta_cc: float,
@@ -197,7 +197,7 @@ def parallel_calc(proposals_path: str,
                   theta_ss: float,
                   use_bilateral_filter: bool) -> None:
     with open(proposals_path) as file:
-        data = json.load(file)[:proposals_nmax]
+        data = json.load(file)
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
     data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float], float, float, float, bool]]
     data_grouped = [(iid,
@@ -207,7 +207,7 @@ def parallel_calc(proposals_path: str,
                      theta_ms,
                      theta_ss,
                      use_bilateral_filter)
-                    for iid in image_ids]
+                     for iid in image_ids][:images_nmax]
     for group in data_grouped:
         print("Searching for image Image COCO_val2014_{0}.jpg".format(str(group[0]).zfill(12)))
     new_data_grouped_nested: List[List[dict]]
@@ -223,7 +223,7 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
     parser = argparse.ArgumentParser(description="Description for my parser")
     parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
     parser.add_argument("-n", "--nmax",
-                        help="Maximum number of proposals to be processed",
+                        help="Maximum number of images to be processed",
                         required=False,
                         default="infinity")
     parser.add_argument("-c", "--cue",
@@ -268,8 +268,8 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
 
 
 def main() -> None:
-    proposals_path, proposals_nmax, cue, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter = parse_args()
-    print("searching for max {0} proposals in {1}".format(proposals_nmax, proposals_path))
+    proposals_path, images_nmax, cue, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter = parse_args()
+    print("searching for max {0} proposal groups in {1}".format(images_nmax, proposals_path))
     weights = (0.25, 0.25, 0.25, 0.25)
     if cue == 0:
         weights = (1.0, 0.0, 0.0, 0.0)
@@ -279,7 +279,7 @@ def main() -> None:
         weights = (0.0, 0.0, 1.0, 0.0)
     elif cue == 3:
         weights = (0.0, 0.0, 0.0, 1.0)
-    parallel_calc(proposals_path, proposals_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
+    parallel_calc(proposals_path, images_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
     exit()
 
 
