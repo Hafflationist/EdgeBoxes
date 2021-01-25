@@ -144,7 +144,8 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
         theta_12: float = calc_angle_between_points((pos_1[0], pos_1[1]), (pos_2[0], pos_2[1]))
         theta_1: float = groups_mean_orientation[group_id_1]
         theta_2: float = groups_mean_orientation[group_id_2]
-        aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25  #** 2.0 TODO Eigentlich sollte hier quadriert werden
+        aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 2.0
+        # aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25  #** 2.0 TODO Eigentlich sollte hier quadriert werden
         if aff <= 0.05:
             return 0.0
         return aff
