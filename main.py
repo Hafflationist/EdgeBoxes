@@ -5,6 +5,7 @@ import itertools
 import json
 import sys
 
+from numpy import random
 from skimage.filters import gaussian
 from skimage.transform import resize
 from src.attentionmask.mask import decode
@@ -90,9 +91,9 @@ def process_single_proposal(proposal: dict,
                             eb_foundation: EdgeboxFoundation,
                             ms_foundation: MultiscaleSaliencyFoundation,
                             ss_foundation: SuperpixelStradlingFoundation,
-                            weights: Tuple[float, float, float, float],
+                            weights: Tuple[float, float, float, float, float],
                             theta_cc: float,
-                            theta_ms: float) -> Tuple[float, float, float, float, float, float]:
+                            theta_ms: float) -> Tuple[float, float, float, float, float, float, float]:
     left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
     cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness = \
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0
@@ -107,12 +108,16 @@ def process_single_proposal(proposal: dict,
         ss_objectness = ss.get_objectness(ss_foundation, mask)
         print("ss_objn: {}".format(ss_objectness))
 
-    return cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness
+    return cc_objectness, \
+           eb_objectness, \
+           ms_objectness_1, ms_objectness_2, ms_objectness_3, \
+           ss_objectness, \
+           random.uniform(0.0, 1.0)
 
 
 def process_proposal_group(image_id: int,
                            proposals: List[dict],
-                           weights: Tuple[float, float, float, float],
+                           weights: Tuple[float, float, float, float, float],
                            theta_cc: float,
                            theta_ms: float,
                            theta_ss: float,
@@ -136,8 +141,12 @@ def process_proposal_group(image_id: int,
         ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss, use_bilateral_filter)
         print("ss_foundation calculated!")
 
-    def new_proposal(old_proposal: dict) -> Tuple[dict, float, float, float, float, float, float]:
-        cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness = \
+    def new_proposal(old_proposal: dict) -> Tuple[dict, float, float, float, float, float, float, float]:
+        cc_objectness, \
+        eb_objectness, \
+        ms_objectness_1, ms_objectness_2, ms_objectness_3, \
+        ss_objectness, \
+        random_objectness = \
             process_single_proposal(old_proposal,
                                     cc_foundation,
                                     eb_foundation,
@@ -147,9 +156,13 @@ def process_proposal_group(image_id: int,
                                     theta_cc,
                                     theta_ms)
         return old_proposal, \
-               cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness
+               cc_objectness, \
+               eb_objectness, \
+               ms_objectness_1, ms_objectness_2, ms_objectness_3, \
+               ss_objectness, \
+               random_objectness
 
-    new_proposals: List[Tuple[dict, float, float, float, float, float, float]] = list(map(new_proposal, proposals))
+    new_proposals: List[Tuple[dict, float, float, float, float, float, float, float]] = list(map(new_proposal, proposals))
 
     def min_max_from_idx(idx: int) -> Tuple[float, float]:
         objn_list = list(map(lambda p: p[idx], new_proposals))
@@ -167,7 +180,7 @@ def process_proposal_group(image_id: int,
     ms_objn_3_list_min, ms_objn_3_list_max = min_max_from_idx(5)
     ss_objn_list_min, ss_objn_list_max = min_max_from_idx(6)
     print("cc_objn_list_min = {}\t|\t cc_objn_list_max = {}".format(cc_objn_list_min, cc_objn_list_max))
-    for proposal, cc_objn, eb_objn, ms_objn_1, ms_objn_2, ms_objn_3, ss_objn in new_proposals:
+    for proposal, cc_objn, eb_objn, ms_objn_1, ms_objn_2, ms_objn_3, ss_objn, rand_objn in new_proposals:
         cc_objn_eq = equalize(cc_objn, cc_objn_list_min, cc_objn_list_max) * weights[0]
         eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
         ms_objn_1_eq = equalize(ms_objn_1, ms_objn_1_list_min, ms_objn_1_list_max) * weights[2]
@@ -183,6 +196,8 @@ def process_proposal_group(image_id: int,
             final_objn += max(ms_objn_1_eq, ms_objn_2_eq, ms_objn_3_eq)
         if abs(weights[3]) > 0.0001:
             final_objn += ss_objn_eq
+        if abs(weights[4]) > 0.0001:
+            final_objn += rand_objn * weights[4]
         proposal['objn'] = final_objn
         proposal['score'] = final_objn
     return list(map(lambda x: x[0], new_proposals))
@@ -190,7 +205,7 @@ def process_proposal_group(image_id: int,
 
 def parallel_calc(proposals_path: str,
                   images_nmax: int,
-                  weights: Tuple[float, float, float, float],
+                  weights: Tuple[float, float, float, float, float],
                   suffix: str,
                   theta_cc: float,
                   theta_ms: float,
@@ -199,7 +214,7 @@ def parallel_calc(proposals_path: str,
     with open(proposals_path) as file:
         data = json.load(file)
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
-    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float], float, float, float, bool]]
+    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float, float], float, float, float, bool]]
     data_grouped = [(iid,
                      list(filter(lambda proposal: proposal['image_id'] == iid, data)),
                      weights,
@@ -227,7 +242,7 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
                         required=False,
                         default="infinity")
     parser.add_argument("-c", "--cue",
-                        help="Used cue to calculate objectness score (default=all, -1=all, 0=CC, 1=EB, 2=MS, 3=SS)",
+                        help="Used cue to calculate objectness score (default=all, -1=all, 0=CC, 1=EB, 2=MS, 3=SS, 4=Random)",
                         required=False,
                         default="-1")
     parser.add_argument("-s", "--suffixofoutput",
@@ -252,7 +267,7 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
                         default="False")
 
     argument = parser.parse_args()
-    assert (-1 <= int(argument.cue) <= 3)
+    assert (-1 <= int(argument.cue) <= 4)
     nmax = sys.maxsize
     if argument.nmax != "infinity":
         nmax = int(argument.nmax)
@@ -270,32 +285,34 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
 def main() -> None:
     proposals_path, images_nmax, cue, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter = parse_args()
     print("searching for max {0} proposal groups in {1}".format(images_nmax, proposals_path))
-    weights = (0.25, 0.25, 0.25, 0.25)
+    weights = (0.25, 0.25, 0.25, 0.25, 0.0)
     if cue == 0:
-        weights = (1.0, 0.0, 0.0, 0.0)
+        weights = (1.0, 0.0, 0.0, 0.0, 0.0)
     elif cue == 1:
-        weights = (0.0, 1.0, 0.0, 0.0)
+        weights = (0.0, 1.0, 0.0, 0.0, 0.0)
     elif cue == 2:
-        weights = (0.0, 0.0, 1.0, 0.0)
+        weights = (0.0, 0.0, 1.0, 0.0, 0.0)
     elif cue == 3:
-        weights = (0.0, 0.0, 0.0, 1.0)
+        weights = (0.0, 0.0, 0.0, 1.0, 0.0)
+    elif cue == 4:
+        weights = (0.0, 0.0, 0.0, 0.0, 1.0)
     parallel_calc(proposals_path, images_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
     exit()
 
 
 if __name__ == '__main__':
-    main()
-
-
-    test_img = cv2.imread("assets/testImage_kantendetektion.png")
-    do_things_with_visualizations(test_img, 350, 350, 550, 600)
-    exit()
+    # main()
+    #
+    #
+    # test_img = cv2.imread("assets/testImage_kantendetektion.png")
+    # do_things_with_visualizations(test_img, 350, 350, 550, 600)
+    # exit()
     # test_img = np.resize(cv2.imread("assets/testImage_schreibtisch.jpg"), (100, 100))
     # test_img = cv2.imread("assets/testImage_batterien.jpg")
     # test_img = cv2.imread("assets/testImage_bahn.jpg")
     # cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
 
-    test_img = cv2.imread("assets/testImage_giraffe.jpg")
+    test_img = cv2.imread("assets/testImage_auto.jpg")
     original_shape = test_img.shape
     saliency = ms.__calculate_multiscale_saliency(test_img, 1)
     cv2.imshow("saliency1", resize(saliency, original_shape))
