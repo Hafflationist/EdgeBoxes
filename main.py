@@ -301,7 +301,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     #
     #
     # test_img = cv2.imread("assets/testImage_kantendetektion.png")
