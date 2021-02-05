@@ -242,7 +242,7 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
                         required=False,
                         default="infinity")
     parser.add_argument("-c", "--cue",
-                        help="Used cue to calculate objectness score (default=all, -1=all, 0=CC, 1=EB, 2=MS, 3=SS, 4=Random)",
+                        help="Used cue to calculate objectness score (default=all, -1=all, 0=CC, 1=EB, 2=MS, 3=SS, 4=Random, 5=Constant 0)",
                         required=False,
                         default="-1")
     parser.add_argument("-s", "--suffixofoutput",
@@ -267,7 +267,7 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
                         default="False")
 
     argument = parser.parse_args()
-    assert (-1 <= int(argument.cue) <= 4)
+    assert (-1 <= int(argument.cue) <= 5)
     nmax = sys.maxsize
     if argument.nmax != "infinity":
         nmax = int(argument.nmax)
@@ -296,6 +296,8 @@ def main() -> None:
         weights = (0.0, 0.0, 0.0, 1.0, 0.0)
     elif cue == 4:
         weights = (0.0, 0.0, 0.0, 0.0, 1.0)
+    elif cue == 4:
+        weights = (0.0, 0.0, 0.0, 0.0, 0.0)
     parallel_calc(proposals_path, images_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
     exit()
 
