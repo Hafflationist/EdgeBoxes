@@ -296,7 +296,7 @@ def main() -> None:
         weights = (0.0, 0.0, 0.0, 1.0, 0.0)
     elif cue == 4:
         weights = (0.0, 0.0, 0.0, 0.0, 1.0)
-    elif cue == 4:
+    elif cue == 5:
         weights = (0.0, 0.0, 0.0, 0.0, 0.0)
     parallel_calc(proposals_path, images_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
     exit()
