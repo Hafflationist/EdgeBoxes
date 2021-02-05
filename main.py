@@ -112,7 +112,7 @@ def process_single_proposal(proposal: dict,
            eb_objectness, \
            ms_objectness_1, ms_objectness_2, ms_objectness_3, \
            ss_objectness, \
-           random.uniform(0.0, 1.0)
+           random.uniform(0.0, 0.2)
 
 
 def process_proposal_group(image_id: int,
