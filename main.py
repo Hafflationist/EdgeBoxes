@@ -174,7 +174,7 @@ def process_proposal_group(image_id: int,
         print("ss_foundation calculated!")
 
     def new_proposal(old_proposal: dict) -> Tuple[dict, float, float, float, float, float, float, float]:
-        mask = segmentation_2_mask(proposal['segmentation'])
+        mask = segmentation_2_mask(old_proposal['segmentation'])
         cc_objectness, \
         eb_objectness, \
         ms_objectness_1, ms_objectness_2, ms_objectness_3, \
