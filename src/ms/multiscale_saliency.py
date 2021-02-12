@@ -67,4 +67,4 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
     scale_1_obj = scale_specific(foundation.saliency_1)
     scale_2_obj = scale_specific(foundation.saliency_2)
     scale_3_obj = scale_specific(foundation.saliency_3)
-    return scale_1_obj, scale_2_obj, scale_3_obj
+    return len(mask_coords), scale_2_obj, scale_3_obj

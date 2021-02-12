@@ -176,10 +176,10 @@ def process_proposal_group(image_id: int,
     cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)
     eb_objn_list_min, eb_objn_list_max = min_max_from_idx(2)
     ms_objn_1_list_min, ms_objn_1_list_max = min_max_from_idx(3)
+    print("ms_objn_1_list_min={} \t ms_objn_1_list_max={}".format(ms_objn_1_list_min, ms_objn_1_list_max))
     ms_objn_2_list_min, ms_objn_2_list_max = min_max_from_idx(4)
     ms_objn_3_list_min, ms_objn_3_list_max = min_max_from_idx(5)
     ss_objn_list_min, ss_objn_list_max = min_max_from_idx(6)
-    print("cc_objn_list_min = {}\t|\t cc_objn_list_max = {}".format(cc_objn_list_min, cc_objn_list_max))
     for proposal, cc_objn, eb_objn, ms_objn_1, ms_objn_2, ms_objn_3, ss_objn, rand_objn in new_proposals:
         cc_objn_eq = equalize(cc_objn, cc_objn_list_min, cc_objn_list_max) * weights[0]
         eb_objn_eq = equalize(eb_objn, eb_objn_list_min, eb_objn_list_max) * weights[1]
