@@ -133,10 +133,9 @@ def process_single_proposal(mask: ndarray,
         eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     if abs(weights[2]) > 0.0001:
         ms_objectness_1, ms_objectness_2, ms_objectness_3 = \
-            ms.get_objectness(ms_foundation, mask, mask_scale, theta_ms, learned=True)
+            ms.get_objectness(ms_foundation, mask, mask_scale, theta_ms)
     if abs(weights[3]) > 0.0001:
         ss_objectness = ss.get_objectness(ss_foundation, mask)
-        print("ss_objn: {}".format(ss_objectness))
 
     return cc_objectness, \
            eb_objectness, \
@@ -205,7 +204,6 @@ def process_proposal_group(image_id: int,
     cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)
     eb_objn_list_min, eb_objn_list_max = min_max_from_idx(2)
     ms_objn_1_list_min, ms_objn_1_list_max = min_max_from_idx(3)
-    print("ms_objn_1_list_min={} \t ms_objn_1_list_max={}".format(ms_objn_1_list_min, ms_objn_1_list_max))
     ms_objn_2_list_min, ms_objn_2_list_max = min_max_from_idx(4)
     ms_objn_3_list_min, ms_objn_3_list_max = min_max_from_idx(5)
     ss_objn_list_min, ss_objn_list_max = min_max_from_idx(6)
