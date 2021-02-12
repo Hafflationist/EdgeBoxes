@@ -54,7 +54,11 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
                    mask_coords: ndarray,
                    mask_scale: float,
                    theta_ms: float = 0.0) -> Tuple[float, float, float]:
-    flexible_theta_ms = (1.0 - mask_scale) * theta_ms
+
+    if mask_scale >= 0.5:
+        flexible_theta_ms = 0.0
+    else:
+        flexible_theta_ms = (1.0 - (2.0 * mask_scale)) * theta_ms
 
     def scale_specific(saliency: ndarray) -> float:
         mask_values = np.array(list(map(lambda idx: saliency[idx[0], idx[1]], mask_coords)))
