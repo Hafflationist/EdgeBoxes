@@ -19,7 +19,7 @@ import numpy as np
 
 from numpy.core.multiarray import ndarray
 from multiprocessing import Pool
-from typing import Tuple, List, Set
+from typing import Tuple, List, Set, Union
 
 
 def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int) -> None:
@@ -75,6 +75,30 @@ def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int,
     print(obj)
 
 
+def equalize(value: Union[float, int], value_min: Union[float, int], value_max: Union[float, int]) -> float:
+    if value_max == value_min:
+        return -1.0
+    return float(value - value_min) / float(value_max - value_min)
+
+
+def segmentation_2_mask(seg) -> ndarray:
+    mask = decode(seg)
+    coords = np.where(mask == 1)
+    mask_coords = np.transpose(coords)
+    if len(coords[0]) == 0:
+        return np.array([(0, 0)])
+    return mask_coords
+
+
+def mask_2_borders(mask_coords) -> Tuple[int, int, int, int]:
+    coords = np.transpose(mask_coords)
+    row_coords = coords[0]
+    col_coords = coords[1]
+    if len(row_coords) == 0:
+        return 0, 0, 0, 0
+    return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords)
+
+
 def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, ndarray]:
     mask = decode(seg)
     coords = np.where(mask == 1)
@@ -86,7 +110,13 @@ def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, ndarray]:
     return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords), mask_coords
 
 
-def process_single_proposal(proposal: dict,
+def minmax_of_mask_area(proposals: List[dict]) -> Tuple[int, int]:
+    areas = list(map(lambda prop: len(segmentation_2_mask(prop['segmentation'])), proposals))
+    return min(areas), max(areas)
+
+
+def process_single_proposal(mask: ndarray,
+                            mask_scale: float,
                             cc_foundation: ColorContrastFoundation,
                             eb_foundation: EdgeboxFoundation,
                             ms_foundation: MultiscaleSaliencyFoundation,
@@ -94,7 +124,7 @@ def process_single_proposal(proposal: dict,
                             weights: Tuple[float, float, float, float, float],
                             theta_cc: float,
                             theta_ms: float) -> Tuple[float, float, float, float, float, float, float]:
-    left, top, right, bottom, mask = segmentation_2_borders_and_mask(proposal['segmentation'])
+    left, top, right, bottom = mask_2_borders(mask)
     cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ss_objectness = \
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     if abs(weights[0]) > 0.0001:
@@ -103,7 +133,7 @@ def process_single_proposal(proposal: dict,
         eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
     if abs(weights[2]) > 0.0001:
         ms_objectness_1, ms_objectness_2, ms_objectness_3 = \
-            ms.get_objectness(ms_foundation, mask, theta_ms, learned=True)
+            ms.get_objectness(ms_foundation, mask, mask_scale, theta_ms, learned=True)
     if abs(weights[3]) > 0.0001:
         ss_objectness = ss.get_objectness(ss_foundation, mask)
         print("ss_objn: {}".format(ss_objectness))
@@ -122,6 +152,8 @@ def process_proposal_group(image_id: int,
                            theta_ms: float,
                            theta_ss: float,
                            use_bilateral_filter: bool) -> List[dict]:
+    area_min, area_max = minmax_of_mask_area(proposals)
+
     img = cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     if img is None:
         print("Image COCO_val2014_{0}.jpg not found!".format(str(image_id).zfill(12)))
@@ -142,12 +174,14 @@ def process_proposal_group(image_id: int,
         print("ss_foundation calculated!")
 
     def new_proposal(old_proposal: dict) -> Tuple[dict, float, float, float, float, float, float, float]:
+        mask = segmentation_2_mask(proposal['segmentation'])
         cc_objectness, \
         eb_objectness, \
         ms_objectness_1, ms_objectness_2, ms_objectness_3, \
         ss_objectness, \
         random_objectness = \
-            process_single_proposal(old_proposal,
+            process_single_proposal(mask,
+                                    equalize(len(mask), area_min, area_max),
                                     cc_foundation,
                                     eb_foundation,
                                     ms_foundation,
@@ -167,11 +201,6 @@ def process_proposal_group(image_id: int,
     def min_max_from_idx(idx: int) -> Tuple[float, float]:
         objn_list = list(map(lambda p: p[idx], new_proposals))
         return np.min(objn_list), np.max(objn_list)
-
-    def equalize(value: float, value_min: float, value_max: float) -> float:
-        if value_max == value_min:
-            return -1.0
-        return (value - value_min) / (value_max - value_min)
 
     cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)
     eb_objn_list_min, eb_objn_list_max = min_max_from_idx(2)
