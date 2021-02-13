@@ -11,7 +11,7 @@ import numpy as np
 from typing import Tuple, List, Optional
 
 def calc_ground_truth(proposals: List[dict]) -> List[float]:
-    proposals_copy = copy.deepcopy(proposals)
+    proposals_copy = list(copy.deepcopy(proposals))
     for proposal in proposals_copy:
         # TODO: Calculate real ground truth from SCRIPT
         proposal['objn'] = 0.0
