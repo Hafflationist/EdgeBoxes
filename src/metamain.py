@@ -44,7 +44,7 @@ def calc_regressand(proposals: List[dict],
 
     for tup in zip(*scores_list):
         proposal = tup[0]
-        prediction = svr.predict(list(tup[1:]))
+        prediction = svr.predict([list(tup[1:])])
         proposal['objn'] = prediction
         proposal['score'] = prediction
 
@@ -103,7 +103,7 @@ def metamain():
         scores_ss = extract_scores(proposals)
         scores_list.append(scores_ss)
 
-    X = [list(i) for i in zip(*scores_list)]   # transposing list of lists
+    X: List[List[float]] = [list(i) for i in zip(*scores_list)]   # transposing list of lists
     y = calc_ground_truth(proposals)
 
     svr = svm.SVR()
