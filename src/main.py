@@ -262,7 +262,7 @@ def parallel_calc(proposals_path: str,
 
 
 def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
-    parser = argparse.ArgumentParser(description="Description for my parser")
+    parser = argparse.ArgumentParser(description="Objectnessscoring")
     parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
     parser.add_argument("-n", "--nmax",
                         help="Maximum number of images to be processed",
