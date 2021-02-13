@@ -7,8 +7,8 @@ import math
 from functools import reduce
 from numpy.core.multiarray import ndarray
 
-from src.eb.EdgeboxFoundation import EdgeboxFoundation
-from src.utils.utils import get_n8
+from eb.EdgeboxFoundation import EdgeboxFoundation
+from utils.utils import get_n8
 
 
 def detect_edges(img: ndarray) -> Tuple[ndarray, ndarray]:
@@ -144,7 +144,8 @@ def calculate_affinities(groups_members: ndarray, orientation_map: ndarray):
         theta_12: float = calc_angle_between_points((pos_1[0], pos_1[1]), (pos_2[0], pos_2[1]))
         theta_1: float = groups_mean_orientation[group_id_1]
         theta_2: float = groups_mean_orientation[group_id_2]
-        aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25  #** 2.0 TODO Eigentlich sollte hier quadriert werden
+        aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 2.0
+        # aff = abs(math.cos(theta_1 - theta_12) * math.cos(theta_2 - theta_12)) ** 0.25  #** 2.0 TODO Eigentlich sollte hier quadriert werden
         if aff <= 0.05:
             return 0.0
         return aff
@@ -228,7 +229,9 @@ def get_objectness(foundation: EdgeboxFoundation,
                     left, top, right, bottom)
     h = np.sum(list(map(lambda group_id: w[group_id] * sum_of_magnitudes[group_id], groups_in_box)))
     h /= 2 * (((right - left) + (bottom - top)) ** 1.5)
-
+    # TODO: Grober Fehler entdeck! "sub" sollte durch eine kleinere Box berechnet werden!
+    # Entweder der Fehler wird korrigiert oder die zweite Berechnungsmethode wird nicht mehr angeboten.
+    # Immerhin stehen bereits einige andere zur Verfügung
     relevant_for_sub = filter(lambda group_id: w[group_id] < 1.0, groups_in_box)
     sub = np.sum(list(map(lambda group_id: sum_of_magnitudes[group_id] * (1.0 - w[group_id]), relevant_for_sub)))
     sub /= 2 * (((right - left) + (bottom - top)) ** 1.5)

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Any, DefaultDict, Generic, Iterator, Set, Tuple, TypeVar
 
-from src.ss.IdDict import IdDict, IdDictInverse
+from ss.IdDict import IdDict, IdDictInverse
 
 T = TypeVar("T")
 

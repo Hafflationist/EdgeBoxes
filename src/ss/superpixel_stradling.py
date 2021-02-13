@@ -11,9 +11,9 @@ from tqdm import tqdm
 from typing import List, Set, Iterable, Tuple
 from numpy.core.multiarray import ndarray
 
-from src.ss.DisjointSet import DisjointSet
-from src.ss.SuperpixelStradlingFoundation import SuperpixelStradlingFoundation
-from src.utils.utils import get_n8
+from ss.DisjointSet import DisjointSet
+from ss.SuperpixelStradlingFoundation import SuperpixelStradlingFoundation
+from utils.utils import get_n8
 
 
 def __generate_weight_matrix(img: ndarray) -> lil_matrix:

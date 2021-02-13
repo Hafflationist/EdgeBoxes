@@ -3,12 +3,14 @@ from numpy.core.multiarray import ndarray
 from skimage import color
 from typing import Tuple
 
-from src.cc.ColorContrastFoundation import ColorContrastFoundation
+from cc.ColorContrastFoundation import ColorContrastFoundation
 
 
 def __histogram_of_windows(img: ndarray, left: int, top: int, right: int, bottom: int) -> Tuple[ndarray, ndarray]:
     hist, bins = np.histogram(img[top:bottom, left:right], bins=16, range=(np.min(img), np.max(img)))
     hist = hist / np.sum(hist)
+    if np.isnan(np.sum(hist)):
+        print("left: {};  top:{};   right:{};   bottom:{}".format(left, top, right, bottom))
     return hist, bins
 
 
@@ -34,6 +36,8 @@ def get_objectness(foundation: ColorContrastFoundation,
 
     width = right - left
     height = bottom - top
+    if width <= 2 or height <= 2:
+        return 0.0
 
     half_delta_width: int = int(width * theta_cc - width) // 2
     half_delta_height: int = int(height * theta_cc - height) // 2
@@ -41,7 +45,7 @@ def get_objectness(foundation: ColorContrastFoundation,
     left_surr: int = max(left - half_delta_width, 0)
     top_surr: int = max(top - half_delta_height, 0)
     right_surr: int = min(right + half_delta_width, len(foundation.img_lab[0]) - 1)
-    bottom_surr: int = max(bottom + half_delta_height, len(foundation.img_lab) - 1)
+    bottom_surr: int = min(bottom + half_delta_height, len(foundation.img_lab) - 1)
 
     img_l: ndarray = np.array([[px[0] for px in row] for row in foundation.img_lab])
     img_a: ndarray = np.array([[px[1] for px in row] for row in foundation.img_lab])

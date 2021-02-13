@@ -1,6 +1,6 @@
 from pycocotools import mask as _mask
 
-from src.attentionmask.type_assert import *
+from attentionmask.type_assert import *
 
 EPS = 1e-9
 

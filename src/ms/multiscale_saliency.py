@@ -7,7 +7,7 @@ from skimage.transform import resize
 from skimage.filters import gaussian
 from scipy.ndimage import convolve
 
-from src.ms.MultiscaleSaliencyFoundation import MultiscaleSaliencyFoundation
+from ms.MultiscaleSaliencyFoundation import MultiscaleSaliencyFoundation
 
 
 def __calculate_one_channel(img_mono: ndarray) -> ndarray:
@@ -52,14 +52,17 @@ def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
 
 def get_objectness(foundation: MultiscaleSaliencyFoundation,
                    mask_coords: ndarray,
-                   theta_ms: float = 0.0,
-                   learned: bool = False) -> Tuple[float, float, float]:
-    if not learned:
-        theta_ms = 2.0 / 3.0
+                   mask_scale: float,
+                   theta_ms: float = 0.0) -> Tuple[float, float, float]:
+
+    if mask_scale >= 0.5:
+        flexible_theta_ms = 0.0
+    else:
+        flexible_theta_ms = (1.0 - (2.0 * mask_scale)) * theta_ms
 
     def scale_specific(saliency: ndarray) -> float:
         mask_values = np.array(list(map(lambda idx: saliency[idx[0], idx[1]], mask_coords)))
-        max_post = np.max(saliency) * theta_ms
+        max_post = np.max(saliency) * flexible_theta_ms
         mask_values_filtered = list(filter(lambda p: p >= max_post, mask_values))
         mask_n = len(mask_coords)
         return np.sum(mask_values_filtered) * float(len(mask_values_filtered) / float(mask_n))
@@ -67,4 +70,5 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
     scale_1_obj = scale_specific(foundation.saliency_1)
     scale_2_obj = scale_specific(foundation.saliency_2)
     scale_3_obj = scale_specific(foundation.saliency_3)
+    # return 0.0, 0.0, 0.0
     return scale_1_obj, scale_2_obj, scale_3_obj
