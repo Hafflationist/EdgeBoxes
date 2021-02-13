@@ -341,7 +341,7 @@ if __name__ == '__main__':
     # test_img = cv2.imread("assets/testImage_bahn.jpg")
     # cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
 
-    test_img = cv2.imread("assets/testImage_auto.jpg")
+    test_img = cv2.imread("../assets/testImage_auto.jpg")
     original_shape = test_img.shape
     saliency = ms.__calculate_multiscale_saliency(test_img, 1)
     cv2.imshow("saliency1", resize(saliency, original_shape))
