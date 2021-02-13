@@ -7,8 +7,8 @@ import math
 from functools import reduce
 from numpy.core.multiarray import ndarray
 
-from src.eb.EdgeboxFoundation import EdgeboxFoundation
-from src.utils.utils import get_n8
+from eb.EdgeboxFoundation import EdgeboxFoundation
+from utils.utils import get_n8
 
 
 def detect_edges(img: ndarray) -> Tuple[ndarray, ndarray]:

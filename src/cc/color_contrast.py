@@ -3,7 +3,7 @@ from numpy.core.multiarray import ndarray
 from skimage import color
 from typing import Tuple
 
-from src.cc.ColorContrastFoundation import ColorContrastFoundation
+from cc.ColorContrastFoundation import ColorContrastFoundation
 
 
 def __histogram_of_windows(img: ndarray, left: int, top: int, right: int, bottom: int) -> Tuple[ndarray, ndarray]:

@@ -7,7 +7,7 @@ from skimage.transform import resize
 from skimage.filters import gaussian
 from scipy.ndimage import convolve
 
-from src.ms.MultiscaleSaliencyFoundation import MultiscaleSaliencyFoundation
+from ms.MultiscaleSaliencyFoundation import MultiscaleSaliencyFoundation
 
 
 def __calculate_one_channel(img_mono: ndarray) -> ndarray:

@@ -8,13 +8,13 @@ import sys
 from numpy import random
 from skimage.filters import gaussian
 from skimage.transform import resize
-from src.attentionmask.mask import decode
+from attentionmask.mask import decode
 from skimage.transform import rescale
 
-from src.eb import edgebox_coloring as ebc, edgebox as eb, EdgeboxFoundation
-from src.cc import color_contrast as cc, ColorContrastFoundation
-from src.ms import multiscale_saliency as ms, MultiscaleSaliencyFoundation
-from src.ss import superpixel_stradling_coloring as ssc, superpixel_stradling as ss, SuperpixelStradlingFoundation
+from eb import edgebox_coloring as ebc, edgebox as eb, EdgeboxFoundation
+from cc import color_contrast as cc, ColorContrastFoundation
+from ms import multiscale_saliency as ms, MultiscaleSaliencyFoundation
+from ss import superpixel_stradling_coloring as ssc, superpixel_stradling as ss, SuperpixelStradlingFoundation
 import numpy as np
 
 from numpy.core.multiarray import ndarray
