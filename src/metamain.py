@@ -110,7 +110,7 @@ def metamain():
     svr.fit(X, y)
 
     new_proposals = calc_regressand(proposals, scores_am, scores_cc, scores_eb, scores_ms, scores_ss, svr)
-
+    print(new_proposals)
     with open(output_path, "w") as file:
         json.dump(list(new_proposals), file)
 
