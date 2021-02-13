@@ -42,8 +42,9 @@ def calc_regressand(proposals: List[dict],
     if scores_ss is not None:
         scores_list.append(scores_ss)
 
-    for proposal, am, cc, eb, ms, ss in zip(*scores_list):
-        prediction = svr.predict([am, cc, eb, ms, ss])
+    for tup in zip(*scores_list):
+        proposal = tup[0]
+        prediction = svr.predict(list(tup[1:]))
         proposal['objn'] = prediction
         proposal['score'] = prediction
 
