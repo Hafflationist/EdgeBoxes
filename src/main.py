@@ -130,7 +130,7 @@ def process_single_proposal(mask: ndarray,
     if abs(weights[0]) > 0.0001:
         cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom, theta_cc)
     if abs(weights[1]) > 0.0001:
-        eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[1]
+        eb_objectness = eb.get_objectness(eb_foundation, left, top, right, bottom)[0]
     if abs(weights[2]) > 0.0001:
         ms_objectness_1, ms_objectness_2, ms_objectness_3 = \
             ms.get_objectness(ms_foundation, mask, mask_scale, theta_ms)
