@@ -105,6 +105,7 @@ def metamain():
         scores_list.append(scores_ss)
 
     X: List[List[float]] = [list(i) for i in zip(*scores_list)]   # transposing list of lists
+    print(X)
     y = calc_ground_truth(proposals)
 
     svr = svm.SVR()
