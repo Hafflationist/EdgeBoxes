@@ -67,8 +67,9 @@ def metamain():
     path_eb, \
     path_ms, \
     path_ss, \
+    learning_method, \
     output_path, \
-    learning_method = parse_args()
+    algorithms = parse_args()
 
     scores_am: Optional[List[float]]= None
     scores_cc: Optional[List[float]]= None
@@ -78,27 +79,27 @@ def metamain():
     scores_list: List[List[float]] = []
     proposals: List[dict] = []
 
-    if path_am: # dirty implicit conversion to true/false
+    if "am" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_am)
         scores_am = extract_scores(proposals)
         scores_list.append(scores_am)
 
-    if path_cc: # dirty implicit conversion to true/false
+    if "cc" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_cc)
         scores_cc = extract_scores(proposals)
         scores_list.append(scores_cc)
 
-    if path_eb: # dirty implicit conversion to true/false
+    if "eb" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_eb)
         scores_eb = extract_scores(proposals)
         scores_list.append(scores_eb)
 
-    if path_ms: # dirty implicit conversion to true/false
+    if "ms" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_ms)
         scores_ms = extract_scores(proposals)
         scores_list.append(scores_ms)
 
-    if path_ss: # dirty implicit conversion to true/false
+    if "ss" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_ss)
         scores_ss = extract_scores(proposals)
         scores_list.append(scores_ss)
@@ -111,13 +112,13 @@ def metamain():
 
     new_proposals = calc_regressand(proposals, scores_am, scores_cc, scores_eb, scores_ms, scores_ss, svr)
 
-    with open(output_path, "w") as file:
+    with open(output_path + "/attentionMask-8-128.json.combi." + algorithms + ".json", "w") as file:
         json.dump(list(new_proposals), file)
 
     print("metamain!")
 
 
-def parse_args() -> Tuple[str, str, str, str, str, str, str]:
+def parse_args() -> Tuple[str, str, str, str, str, str, str, str]:
     parser = argparse.ArgumentParser(description="Objectnessscorings meta")
     parser.add_argument("-a", "--am",
                         help="Path to AM results",
@@ -138,7 +139,10 @@ def parse_args() -> Tuple[str, str, str, str, str, str, str]:
                         help="ML method (\"trees\" or \"svm\")",
                         required=True)
     parser.add_argument("-o", "--output_path",
-                        help="Path of output file with filename",
+                        help="Path of output file without filename",
+                        required=True)
+    parser.add_argument("-a", "--algorithms",
+                        help="Example: \"am.cc.eb.ms.ss\"; This string will be also used as file name suffix",
                         required=True)
 
     argument = parser.parse_args()
@@ -149,8 +153,9 @@ def parse_args() -> Tuple[str, str, str, str, str, str, str]:
            argument.eb, \
            argument.ms, \
            argument.ss, \
+           argument.learning_method, \
            argument.output_path, \
-           argument.learning_method
+           argument.algorithms
 
 
 if __name__ == '__main__':
