@@ -141,7 +141,7 @@ def parse_args() -> Tuple[str, str, str, str, str, str, str, str]:
     parser.add_argument("-o", "--output_path",
                         help="Path of output file without filename",
                         required=True)
-    parser.add_argument("-a", "--algorithms",
+    parser.add_argument("-A", "--algorithms",
                         help="Example: \"am.cc.eb.ms.ss\"; This string will be also used as file name suffix",
                         required=True)
 
