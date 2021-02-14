@@ -1,6 +1,7 @@
 import argparse
 import json
 import copy
+import math
 from sklearn.svm import SVR
 
 from attentionmask.mask import decode
@@ -83,29 +84,48 @@ def metamain():
         proposals = load_proposals(path_am)
         scores_am = extract_scores(proposals)
         scores_list.append(scores_am)
+        if any(math.isnan(s) for s in scores_am):
+            print("AM-scores contain NAN!")
+        if any(math.isinf(s) for s in scores_am):
+            print("AM-scores contain INF!")
 
     if "cc" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_cc)
         scores_cc = extract_scores(proposals)
         scores_list.append(scores_cc)
+        if any(math.isnan(s) for s in scores_cc):
+            print("CC-scores contain NAN!")
+        if any(math.isinf(s) for s in scores_cc):
+            print("CC-scores contain INF!")
 
     if "eb" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_eb)
         scores_eb = extract_scores(proposals)
         scores_list.append(scores_eb)
+        if any(math.isnan(s) for s in scores_eb):
+            print("EB-scores contain NAN!")
+        if any(math.isinf(s) for s in scores_eb):
+            print("EB-scores contain INF!")
 
     if "ms" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_ms)
         scores_ms = extract_scores(proposals)
         scores_list.append(scores_ms)
+        if any(math.isnan(s) for s in scores_ms):
+            print("MS-scores contain NAN!")
+        if any(math.isinf(s) for s in scores_ms):
+            print("MS-scores contain INF!")
 
     if "ss" in algorithms: # dirty implicit conversion to true/false
         proposals = load_proposals(path_ss)
         scores_ss = extract_scores(proposals)
         scores_list.append(scores_ss)
+        if any(math.isnan(s) for s in scores_ss):
+            print("SS-scores contain NAN!")
+        if any(math.isinf(s) for s in scores_ss):
+            print("SS-scores contain INF!")
 
     X: List[List[float]] = [list(i) for i in zip(*scores_list)]   # transposing list of lists
-    print(X)
     y = calc_ground_truth(proposals)
 
     svr = svm.SVR()
