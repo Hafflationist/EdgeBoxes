@@ -47,7 +47,7 @@ def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
 def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
     return MultiscaleSaliencyFoundation(__calculate_multiscale_saliency(img, 1),
                                         __calculate_multiscale_saliency(img, 2),
-                                        __calculate_multiscale_saliency(img, 3))
+                                        __calculate_multiscale_saliency(img, 4))
 
 
 def get_objectness(foundation: MultiscaleSaliencyFoundation,
