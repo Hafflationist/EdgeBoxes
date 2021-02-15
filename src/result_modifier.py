@@ -9,7 +9,7 @@ def write_new_file(proposals_path: str) -> None:
     for proposal in data:
         proposal['resultID'] = i
         i = i + 1
-    with open(proposals_path + "_", "w") as file:
+    with open(proposals_path, "w") as file:
         json.dump(data, file)
 
 
