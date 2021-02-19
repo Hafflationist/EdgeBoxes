@@ -47,13 +47,14 @@ def __calculate_multiscale_saliency(img_orig: ndarray, scale: int) -> ndarray:
 def image_2_foundation(img: ndarray) -> MultiscaleSaliencyFoundation:
     return MultiscaleSaliencyFoundation(__calculate_multiscale_saliency(img, 1),
                                         __calculate_multiscale_saliency(img, 2),
-                                        __calculate_multiscale_saliency(img, 4))
+                                        __calculate_multiscale_saliency(img, 4),
+                                        __calculate_multiscale_saliency(img, 8))
 
 
 def get_objectness(foundation: MultiscaleSaliencyFoundation,
                    mask_coords: ndarray,
                    mask_scale: float,
-                   theta_ms: float = 0.0) -> Tuple[float, float, float]:
+                   theta_ms: float = 0.0) -> Tuple[float, float, float, float]:
 
     if mask_scale >= 0.5:
         flexible_theta_ms = 0.0
@@ -70,5 +71,6 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
     scale_1_obj = scale_specific(foundation.saliency_1)
     scale_2_obj = scale_specific(foundation.saliency_2)
     scale_3_obj = scale_specific(foundation.saliency_3)
+    scale_4_obj = scale_specific(foundation.saliency_4)
     # return 0.0, 0.0, 0.0
-    return scale_1_obj, scale_2_obj, scale_3_obj
+    return scale_1_obj, scale_2_obj, scale_3_obj, scale_4_obj
