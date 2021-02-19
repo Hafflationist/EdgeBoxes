@@ -11,13 +11,42 @@ import numpy as np
 
 from typing import Tuple, List, Optional
 
-def calc_ground_truth(proposals: List[dict]) -> List[float]:
-    proposals_copy = copy.deepcopy(proposals)
-    for proposal in proposals_copy:
-        # TODO: Calculate real ground truth from SCRIPT
-        proposal['objn'] = 0.0
-        proposal['score'] = 0.0
-    return list(map(lambda p: 0.0, proposals))
+from mypycocotools.mycocoeval import COCOeval
+
+
+def calc_ground_truth(proposals_path: str) -> List[float]:
+    max_dets = [1, 10, 100, 1000]
+
+    from spiders.coco_ssm_spider import COCOSSMDemoSpider
+    spider = COCOSSMDemoSpider()
+    cocoGt = spider.dataset
+
+    cocoDt = cocoGt.loadRes(proposals_path)  # path to results
+    cocoEval = COCOeval(cocoGt, cocoDt)
+
+    cocoEval.params.imgIds = sorted(cocoGt.getImgIds())
+    cocoEval.params.maxDets = max_dets
+    cocoEval.params.useSegm = True
+    cocoEval.params.useCats = False
+    cocoEval.params.iouThrs = [0.5]
+    cocoEval.evaluate()
+
+    counter = 0
+    resultID_2_iou = {}
+    for imgId, foo in cocoEval.ious.keys():
+        counter += 1
+        if cocoEval.ious[(imgId, foo)] != []:
+            cocoEval.ious[(imgId, foo)] = cocoEval.ious[(imgId, foo)][:, :]
+            for resultID in range(cocoEval.ious[(imgId, foo)].shape[0]):
+                iou = np.max(cocoEval.ious[(imgId, foo)][resultID, :])
+                detID = cocoEval._dtIDs[(imgId, -1)][resultID]  # ["resultID"]
+                resultID_2_iou[detID] = iou
+
+    with open(proposals_path) as file:
+        proposals = json.load(file)
+
+    return list(map(lambda p: resultID_2_iou[p['resultID']], proposals))
+
 
 def calc_regressand(proposals: List[dict],
                     scores_am: Optional[List[float]],
