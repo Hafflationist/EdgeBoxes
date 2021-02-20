@@ -21,6 +21,8 @@ from numpy.core.multiarray import ndarray
 from multiprocessing import Pool
 from typing import Tuple, List, Set, Union
 
+from utils.utils import ndarraycoords_2_rect
+
 
 def do_things_with_visualizations(img: ndarray, left: int, top: int, right: int, bottom: int) -> None:
     b2 = datetime.datetime.now()
@@ -90,15 +92,6 @@ def segmentation_2_mask(seg) -> ndarray:
     return mask_coords
 
 
-def mask_2_borders(mask_coords) -> Tuple[int, int, int, int]:
-    coords = np.transpose(mask_coords)
-    row_coords = coords[0]
-    col_coords = coords[1]
-    if len(row_coords) == 0:
-        return 0, 0, 0, 0
-    return np.min(col_coords), np.min(row_coords), np.max(col_coords), np.max(row_coords)
-
-
 def segmentation_2_borders_and_mask(seg) -> Tuple[int, int, int, int, ndarray]:
     mask = decode(seg)
     coords = np.where(mask == 1)
@@ -124,7 +117,7 @@ def process_single_proposal(mask: ndarray,
                             weights: Tuple[float, float, float, float, float],
                             theta_cc: float,
                             theta_ms: float) -> Tuple[float, float, float, float, float, float, float, float]:
-    left, top, right, bottom = mask_2_borders(mask)
+    left, top, right, bottom = ndarraycoords_2_rect(mask)
     cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ms_objectness_4, ss_objectness = \
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     if abs(weights[0]) > 0.0001:
