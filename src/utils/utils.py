@@ -34,6 +34,8 @@ def rect_2_coords(left: int, top: int, right: int, bottom: int) -> Set[Tuple[int
     }
 
 def coords_2_filtercoords(coords: Set[Tuple[int, int]]) -> Tuple[List[int], List[int]]:
+    if len(coords) == 0:
+        return [0], [0]
     coords_T = np.transpose(np.array(list(coords)))
     return coords_T[0], coords_T[1]
 
