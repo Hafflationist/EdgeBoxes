@@ -118,8 +118,8 @@ def process_single_proposal(mask: ndarray,
                             theta_cc: float,
                             theta_ms: float) -> Tuple[float, float, float, float, float, float, float, float, float]:
     left, top, right, bottom = ndarraycoords_2_rect(mask)
-    cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ms_objectness_4, ss_objectness = \
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    cc_objectness, eb_objectness, ms_objectness_1, ms_objectness_2, ms_objectness_3, ms_objectness_4, ms_objectness_5, ss_objectness = \
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     if abs(weights[0]) > 0.0001:
         cc_objectness = cc.get_objectness(cc_foundation, left, top, right, bottom, theta_cc)
     if abs(weights[1]) > 0.0001:
