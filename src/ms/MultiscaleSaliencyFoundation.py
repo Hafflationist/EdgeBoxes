@@ -9,3 +9,4 @@ class MultiscaleSaliencyFoundation:
     saliency_2: ndarray
     saliency_3: ndarray
     saliency_4: ndarray
+    saliency_5: ndarray

@@ -232,6 +232,7 @@ def get_objectness(foundation: EdgeboxFoundation,
     # TODO: Grober Fehler entdeck! "sub" sollte durch eine kleinere Box berechnet werden!
     # Entweder der Fehler wird korrigiert oder die zweite Berechnungsmethode wird nicht mehr angeboten.
     # Immerhin stehen bereits einige andere zur Verfügung
+    # => Die fehlerhafte Version h_in scheint besser zu performen als das korrekte h. Ist h wirklich korrekt?
     relevant_for_sub = filter(lambda group_id: w[group_id] < 1.0, groups_in_box)
     sub = np.sum(list(map(lambda group_id: sum_of_magnitudes[group_id] * (1.0 - w[group_id]), relevant_for_sub)))
     sub /= 2 * (((right - left) + (bottom - top)) ** 1.5)
