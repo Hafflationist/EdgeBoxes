@@ -55,6 +55,7 @@ def gt(path: str) -> List[dict]:
                 detID = cocoEval._dtIDs[(imgId, -1)][resultID]  # ["resultID"]
                 resultID_2_iou[detID] = iou
 
+    print("resultID_2_io = {}".format(resultID_2_iou))
     proposals = load_proposals(path)
     for prop in proposals:
         prop['objn'] = resultID_2_iou[prop['resultID']]
