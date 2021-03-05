@@ -9,43 +9,9 @@ from sklearn import svm
 
 import numpy as np
 
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Dict
 
 from mypycocotools.mycocoeval import COCOeval
-
-
-def calc_ground_truth(proposals_path: str) -> List[float]:
-    max_dets = [1, 10, 100, 1000]
-
-    from spiders.coco_ssm_spider import COCOSSMDemoSpider
-    spider = COCOSSMDemoSpider()
-    cocoGt = spider.dataset
-
-    cocoDt = cocoGt.loadRes(proposals_path)  # path to results
-    cocoEval = COCOeval(cocoGt, cocoDt)
-
-    cocoEval.params.imgIds = sorted(cocoGt.getImgIds())
-    cocoEval.params.maxDets = max_dets
-    cocoEval.params.useSegm = True
-    cocoEval.params.useCats = False
-    cocoEval.params.iouThrs = [0.5]
-    cocoEval.evaluate()
-
-    counter = 0
-    resultID_2_iou = {}
-    for imgId, foo in cocoEval.ious.keys():
-        counter += 1
-        if cocoEval.ious[(imgId, foo)] != []:
-            cocoEval.ious[(imgId, foo)] = cocoEval.ious[(imgId, foo)][:, :]
-            for resultID in range(cocoEval.ious[(imgId, foo)].shape[0]):
-                iou = np.max(cocoEval.ious[(imgId, foo)][resultID, :])
-                detID = cocoEval._dtIDs[(imgId, -1)][resultID]  # ["resultID"]
-                resultID_2_iou[detID] = iou
-
-    with open(proposals_path) as file:
-        proposals = json.load(file)
-
-    return list(map(lambda p: resultID_2_iou[p['resultID']], proposals))
 
 
 def calc_regressand(proposals: List[dict],
@@ -91,7 +57,14 @@ def extract_scores(proposals: List[dict]) -> List[float]:
     return list(map(lambda p: p['objn'], proposals))
 
 
+def create_ordered_gt_results(proposals: List[dict], path_gt: str) -> List[float]:
+    proposals_with_gt = load_proposals(path_gt)
+    gt_dict: Dict[int, float] = {p['resultID']: p['score'] for p in proposals_with_gt}
+    return [gt_dict[p['resultID']] for p in proposals]
+
+
 def metamain():
+    path_gt, \
     path_am, \
     path_cc, \
     path_eb, \
@@ -155,7 +128,7 @@ def metamain():
             print("SS-scores contain INF!")
 
     X: List[List[float]] = [list(i) for i in zip(*scores_list)]   # transposing list of lists
-    y = calc_ground_truth(proposals)
+    y = create_ordered_gt_results(proposals, path_gt)
 
     svr = svm.SVR()
     svr.fit(X, y)
@@ -168,8 +141,11 @@ def metamain():
     print("metamain!")
 
 
-def parse_args() -> Tuple[str, str, str, str, str, str, str, str]:
+def parse_args() -> Tuple[str, str, str, str, str, str, str, str, str]:
     parser = argparse.ArgumentParser(description="Objectnessscorings meta")
+    parser.add_argument("-g", "--gt",
+                        help="Path to GT data",
+                        required=True)
     parser.add_argument("-a", "--am",
                         help="Path to AM results",
                         required=True)
@@ -196,9 +172,11 @@ def parse_args() -> Tuple[str, str, str, str, str, str, str, str]:
                         required=True)
 
     argument = parser.parse_args()
+    assert argument.gt
     assert(argument.am or argument.cc or argument.eb or argument.ms or argument.ss)
     assert argument.output_path
-    return argument.am, \
+    return argument.gt, \
+           argument.am, \
            argument.cc, \
            argument.eb, \
            argument.ms, \

@@ -72,7 +72,7 @@ def metamain():
     with open(path2, "w") as file:
         json.dump(list(new_proposals), file)
 
-    print("metamain!")
+    print("inversifier finished!")
 
 
 def parse_args() -> Tuple[str, str, str]:
