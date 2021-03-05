@@ -4,14 +4,9 @@ import copy
 import math
 from sklearn.svm import SVR
 
-from attentionmask.mask import decode
 from sklearn import svm
 
-import numpy as np
-
 from typing import Tuple, List, Optional, Dict
-
-from mypycocotools.mycocoeval import COCOeval
 
 
 def calc_regressand(proposals: List[dict],
