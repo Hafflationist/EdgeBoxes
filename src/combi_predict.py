@@ -27,19 +27,12 @@ def calc_regressand(proposals: List[dict],
 
 
 def extract_algos(path: str):
-    algo_string = ""
-    if "am." in path:
-        algo_string += "am"
-    if ".cc." in path:
-        algo_string += ".cc"
-    if ".eb." in path:
-        algo_string += ".eb"
-    if ".ms." in path:
-        algo_string += ".ms"
-    if ".ss" in path:
-        algo_string += ".ss"
-    algo_string += "."
-    return algo_string
+    return "am." if "am" in path else "__" \
+         + ".cc." if ".cc" in path else ".__" \
+         + ".eb." if ".eb" in path else ".__" \
+         + ".ms." if ".ms" in path else ".__" \
+         + ".ss." if ".ss" in path else ".__" \
+         + "."
 
 
 def predict(path_am: str,
