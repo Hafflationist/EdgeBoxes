@@ -222,6 +222,9 @@ def get_objectness(foundation: EdgeboxFoundation,
     def sum_magnitudes(matrix: ndarray, members: ndarray):
         return np.sum(list(map(lambda coord: matrix[coord[0], coord[1]], members)))
 
+    if (right - left) < 1 or (bottom - top) < 1:
+        return 0.0, 0.0
+
     groups_in_box = np.unique(foundation.edges_with_grouping[top:bottom, left:right, 1])
     sum_of_magnitudes: list = [sum_magnitudes(foundation.edges_nms, members) for members in foundation.groups_members]
 
