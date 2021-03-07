@@ -227,6 +227,11 @@ def process_proposal_group(image_id: int,
             final_objn += rand_objn * weights[4]
         proposal['objn'] = final_objn
         proposal['score'] = final_objn
+
+        if math.isnan(final_objn):
+            print("final_objn = NAN!! (eb_objn_eq = {}; eb_objn = {}; eb_objn_list_min = {}; eb_objn_list_max = {};)"
+                  .format(eb_objn_eq, eb_objn, eb_objn_list_min, eb_objn_list_max))
+
     return list(map(lambda x: x[0], new_proposals))
 
 
