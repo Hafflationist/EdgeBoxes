@@ -195,6 +195,9 @@ def process_proposal_group(image_id: int,
 
     def min_max_from_idx(idx: int) -> Tuple[float, float]:
         objn_list = list(map(lambda p: p[idx], new_proposals))
+        if idx == 2 and (math.isnan(np.min(objn_list)) or math.isnan(np.max(objn_list))): # EB
+            print("NaN in min_max_from_idx detected! ({})".format(objn_list))
+            exit()
         return np.min(objn_list), np.max(objn_list)
 
     cc_objn_list_min, cc_objn_list_max = min_max_from_idx(1)
