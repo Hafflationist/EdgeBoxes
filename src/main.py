@@ -215,7 +215,7 @@ def process_proposal_group(image_id: int,
         ms_objn_2_eq = equalize(ms_objn_2, ms_objn_2_list_min, ms_objn_2_list_max) * weights[2]
         ms_objn_3_eq = equalize(ms_objn_3, ms_objn_3_list_min, ms_objn_3_list_max) * weights[2]
         ms_objn_4_eq = equalize(ms_objn_4, ms_objn_4_list_min, ms_objn_4_list_max) * weights[2]
-        ms_objn_5_eq = equalize(ms_objn_5, ms_objn_5_list_min, ms_objn_5_list_max) * weights[2]
+        ms_objn_5_eq = -1.0 # equalize(ms_objn_5, ms_objn_5_list_min, ms_objn_5_list_max) * weights[2]
         ss_objn_eq = equalize(ss_objn, ss_objn_list_min, ss_objn_list_max) * weights[3]
         final_objn = 0.0
         if abs(weights[0]) > 0.0001:
