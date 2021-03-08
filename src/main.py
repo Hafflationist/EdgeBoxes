@@ -151,6 +151,8 @@ def process_proposal_group(image_id: int,
 
     img = cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
     if img is None:
+        with open("../missingFiles.sh", "a") as missingFiles:
+            missingFiles.write("scp /data_c/coco/val2014/COCO_val2014_{}.jpg ccblade3:/export2/scratch/8robohm/ba/val2014\n".format(str(image_id).zfill(12)))
         print("Image COCO_val2014_{0}.jpg not found!".format(str(image_id).zfill(12)))
     assert (img is not None)
 
@@ -246,6 +248,7 @@ def parallel_calc(proposals_path: str,
                   theta_ms: float,
                   theta_ss: float,
                   use_bilateral_filter: bool) -> None:
+    open("../missingFiles.sh", "w").close()
     with open(proposals_path) as file:
         data = json.load(file)
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
