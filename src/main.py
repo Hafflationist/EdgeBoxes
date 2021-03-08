@@ -154,6 +154,7 @@ def process_proposal_group(image_id: int,
         with open("../missingFiles.sh", "a") as missingFiles:
             missingFiles.write("scp /data_c/coco/val2014/COCO_val2014_{}.jpg ccblade3:/export2/scratch/8robohm/ba/val2014\n".format(str(image_id).zfill(12)))
         print("Image COCO_val2014_{0}.jpg not found!".format(str(image_id).zfill(12)))
+        return proposals
     assert (img is not None)
 
     cc_foundation, eb_foundation, ms_foundation, ss_foundation = None, None, None, None
