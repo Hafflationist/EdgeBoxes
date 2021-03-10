@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from numpy.core.multiarray import ndarray
 from skimage import color
@@ -24,7 +25,8 @@ def __chi_square_distance(hist_1: ndarray, hist_2: ndarray) -> float:
         return ((pair[0] - pair[1]) ** 2) / divisor
 
     assert len(hist_1) == len(hist_2)
-    return sum(list(map(addend, zip(hist_1, hist_2))))
+    result = sum(list(map(addend, zip(hist_1, hist_2))))
+    return 0.0 if math.isnan(result) else result
 
 
 def image_2_foundation(img: ndarray) -> ColorContrastFoundation:

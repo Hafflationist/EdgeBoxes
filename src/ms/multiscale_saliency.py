@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import math
 import numpy as np
 import numpy.fft
 from numpy.core.multiarray import ndarray
@@ -56,6 +57,9 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
                    mask_coords: ndarray,
                    mask_scale: float,
                    theta_ms: float = 0.0) -> Tuple[float, float, float, float, float]:
+    mask_n = len(mask_coords)
+    if mask_n < 8:
+        return 0.0, 0.0, 0.0, 0.0, 0.0
 
     if mask_scale >= 0.5:
         flexible_theta_ms = 0.0
@@ -66,13 +70,13 @@ def get_objectness(foundation: MultiscaleSaliencyFoundation,
         mask_values = np.array(list(map(lambda idx: saliency[idx[0], idx[1]], mask_coords)))
         max_post = np.max(saliency) * flexible_theta_ms
         mask_values_filtered = list(filter(lambda p: p >= max_post, mask_values))
-        mask_n = len(mask_coords)
-        return np.sum(mask_values_filtered) * float(len(mask_values_filtered) / float(mask_n))
+        result = np.sum(mask_values_filtered) * float(len(mask_values_filtered) / float(mask_n))
+        return 0.0 if math.isnan(result) else result
 
     scale_1_obj = scale_specific(foundation.saliency_1)
     scale_2_obj = scale_specific(foundation.saliency_2)
     scale_3_obj = scale_specific(foundation.saliency_3)
     scale_4_obj = scale_specific(foundation.saliency_4)
     scale_5_obj = scale_specific(foundation.saliency_5)
-    # return 0.0, 0.0, 0.0
+
     return scale_1_obj, scale_2_obj, scale_3_obj, scale_4_obj, scale_5_obj

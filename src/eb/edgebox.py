@@ -240,7 +240,8 @@ def get_objectness(foundation: EdgeboxFoundation,
     sub = np.sum(list(map(lambda group_id: sum_of_magnitudes[group_id] * (1.0 - w[group_id]), relevant_for_sub)))
     sub /= 2 * (((right - left) + (bottom - top)) ** 1.5)
     h_in = h - sub
-    return h, h_in
+    return 0.0 if math.isnan(h) else h, \
+           0.0 if math.isnan(h_in) else h_in
 
 
 def do_all(img: ndarray, left: int, top: int, right: int, bottom: int) -> (float, float):
