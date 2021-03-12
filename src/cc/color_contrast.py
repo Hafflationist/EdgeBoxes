@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from numpy.core.multiarray import ndarray
+from scipy.ndimage import binary_dilation
 from skimage import color
 from typing import Tuple, Set, List
 
@@ -34,29 +35,16 @@ def image_2_foundation(img: ndarray) -> ColorContrastFoundation:
 
 
 def get_objectness(foundation: ColorContrastFoundation,
-                   left: int, top: int, right: int, bottom: int,
+                   mask_coords: Set[Tuple[int, int]],
                    theta_cc: float = 2.0) -> float:
-    core_coords: Set[Tuple[int, int]] = rect_2_coords(left, top, right, bottom)
-    core_filtercoords = coords_2_filtercoords(core_coords)
-    width = right - left
-    height = bottom - top
-    if width <= 2 or height <= 2:
-        return 0.0
+    core_filtercoords = coords_2_filtercoords(mask_coords)
 
     # surrounding
-    half_delta_width: int = int(width * theta_cc - width) // 2
-    half_delta_height: int = int(height * theta_cc - height) // 2
-
-    left_surr: int = max(left - half_delta_width, 0)
-    top_surr: int = max(top - half_delta_height, 0)
-    right_surr: int = min(right + half_delta_width, len(foundation.img_lab[0]) - 1)
-    bottom_surr: int = min(bottom + half_delta_height, len(foundation.img_lab) - 1)
-    surr_core_coords = rect_2_coords(left_surr, top_surr, right_surr, bottom_surr)
-    surr_coords = { coord
-        for coord in surr_core_coords
-        if (coord[0], coord[1]) not in core_coords
-    }
-    surr_filtercoords = coords_2_filtercoords(surr_coords)
+    binary_array = np.zeros(foundation.img_lab.shape)
+    binary_array[core_filtercoords] = 1
+    dilation_iterations = int(((foundation.img_lab.shape[0] + foundation.img_lab.shape[1]) / 2.0) * theta_cc)
+    surr_filtercoords: Tuple[List[int], List[int]] = \
+        np.where(binary_dilation(input=binary_array, iterations=dilation_iterations))
 
     # CIE-LAB
     img_l: ndarray = np.array([[px[0] for px in row] for row in foundation.img_lab])

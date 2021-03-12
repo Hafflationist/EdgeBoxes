@@ -7,6 +7,7 @@ import sys
 import math
 
 from numpy import random
+from scipy.ndimage import binary_dilation
 from skimage.filters import gaussian
 from skimage.transform import resize
 from attentionmask.mask import decode
@@ -343,9 +344,19 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    # img = np.zeros((1,1))
+    # binary_array = np.zeros((5, 5))
+    #
+    # filtercoords: Tuple[List[int], List[int]] = ([1, 2], [2, 2])
+    # binary_array[filtercoords] = 1
+    #
+    # surr_filtercoords = np.where(binary_dilation(input=binary_array, iterations=1))
+    # print(np.where(surr_filtercoords))
+    # print(binary_array)
+    # print(surr_filtercoords)
+    #
+    # exit()
     main()
-    #
-    #
     # test_img = cv2.imread("assets/testImage_kantendetektion.png")
     # do_things_with_visualizations(test_img, 350, 350, 550, 600)
     # exit()
