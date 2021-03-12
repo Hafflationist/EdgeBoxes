@@ -231,6 +231,7 @@ def process_proposal_group(image_id: int,
             final_objn += ss_objn_eq
         if abs(weights[4]) > 0.0001:
             final_objn += rand_objn * weights[4]
+        final_objn = 0.0 if math.isnan(final_objn) else final_objn
         proposal['objn'] = final_objn
         proposal['score'] = final_objn
 
