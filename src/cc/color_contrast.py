@@ -36,7 +36,7 @@ def image_2_foundation(img: ndarray) -> ColorContrastFoundation:
 
 def get_objectness(foundation: ColorContrastFoundation,
                    mask_coords: Set[Tuple[int, int]],
-                   theta_cc: float = 2.0) -> float:
+                   theta_cc: float = 1.0) -> float:
     core_filtercoords = coords_2_filtercoords(mask_coords)
 
     # surrounding
