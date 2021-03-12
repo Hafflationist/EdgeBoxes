@@ -40,8 +40,7 @@ def get_objectness(foundation: ColorContrastFoundation,
     core_filtercoords = coords_2_filtercoords(mask_coords)
 
     # surrounding
-    binary_array = np.zeros(foundation.img_lab.shape)
-    print("foundation.img_lab.shape = {}".format(foundation.img_lab.shape))
+    binary_array = np.zeros((foundation.img_lab.shape[0],foundation.img_lab.shape[1]))
     binary_array[core_filtercoords] = 1
     dilation_iterations = int(((foundation.img_lab.shape[0] + foundation.img_lab.shape[1]) / 2.0) * theta_cc)
     surr_filtercoords: Tuple[List[int], List[int]] = \
