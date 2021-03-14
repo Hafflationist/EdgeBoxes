@@ -34,22 +34,23 @@ def image_2_foundation(img: ndarray) -> ColorContrastFoundation:
     return ColorContrastFoundation(color.rgb2lab(img))
 
 
-def get_objectness(foundation: ColorContrastFoundation,
+def get_objectness(ccf: ColorContrastFoundation,
                    mask_coords: Set[Tuple[int, int]],
+                   mask_scale: float,
                    theta_cc: float = 1.0) -> float:
     core_filtercoords = coords_2_filtercoords(mask_coords)
 
     # surrounding
-    binary_array = np.zeros((foundation.img_lab.shape[0],foundation.img_lab.shape[1]))
+    binary_array = np.zeros((ccf.img_lab.shape[0], ccf.img_lab.shape[1]))
     binary_array[core_filtercoords] = 1
-    dilation_iterations = int(((foundation.img_lab.shape[0] + foundation.img_lab.shape[1]) / 2.0) * theta_cc)
+    dilation_iterations = max(int(((ccf.img_lab.shape[0] + ccf.img_lab.shape[1]) / 2) * theta_cc * mask_scale), 1)
     surr_filtercoords: Tuple[List[int], List[int]] = \
         np.where(binary_dilation(input=binary_array, iterations=dilation_iterations))
 
     # CIE-LAB
-    img_l: ndarray = np.array([[px[0] for px in row] for row in foundation.img_lab])
-    img_a: ndarray = np.array([[px[1] for px in row] for row in foundation.img_lab])
-    img_b: ndarray = np.array([[px[2] for px in row] for row in foundation.img_lab])
+    img_l: ndarray = np.array([[px[0] for px in row] for row in ccf.img_lab])
+    img_a: ndarray = np.array([[px[1] for px in row] for row in ccf.img_lab])
+    img_b: ndarray = np.array([[px[2] for px in row] for row in ccf.img_lab])
 
     # histograms
     img_l_hist = __histogram_of_windows(img_l, core_filtercoords)
