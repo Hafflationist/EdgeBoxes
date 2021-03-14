@@ -268,7 +268,7 @@ def parallel_calc(proposals_path: str,
         print("Searching for image Image COCO_val2014_{0}.jpg".format(str(group[0]).zfill(12)))
     new_data_grouped_nested: List[List[dict]]
     print("{0} proposal groups found".format(len(data_grouped)))
-    with Pool(9) as pool:
+    with Pool(40) as pool:
         new_data_grouped_nested = pool.starmap(process_proposal_group, data_grouped)
     new_data_grouped: List[dict] = list(itertools.chain.from_iterable(new_data_grouped_nested))
     with open(proposals_path + suffix, "w") as file:
