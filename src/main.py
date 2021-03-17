@@ -344,18 +344,6 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    # img = np.zeros((1,1))
-    # binary_array = np.zeros((5, 5))
-    #
-    # filtercoords: Tuple[List[int], List[int]] = ([1, 2], [2, 2])
-    # binary_array[filtercoords] = 1
-    #
-    # surr_filtercoords = np.where(binary_dilation(input=binary_array, iterations=1))
-    # print(np.where(surr_filtercoords))
-    # print(binary_array)
-    # print(surr_filtercoords)
-    #
-    # exit()
     main()
     # test_img = cv2.imread("assets/testImage_kantendetektion.png")
     # do_things_with_visualizations(test_img, 350, 350, 550, 600)
@@ -365,7 +353,18 @@ if __name__ == '__main__':
     # test_img = cv2.imread("assets/testImage_bahn.jpg")
     # cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
 
-    test_img = cv2.imread("../assets/testImage_auto.jpg")
+    test_img = cv2.imread("../assets/testImage_strand.jpg")
+    seg = ss.__segmentate(test_img, 2.0)
+
+    cv2.imshow("saliency1", ssc.color_segmentation(test_img, seg))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+
+
+
+    exit()
     original_shape = test_img.shape
     saliency = ms.__calculate_multiscale_saliency(test_img, 1)
     cv2.imshow("saliency1", resize(saliency, original_shape))
