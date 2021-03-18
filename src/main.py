@@ -353,10 +353,9 @@ if __name__ == '__main__':
     # test_img = cv2.imread("assets/testImage_bahn.jpg")
     # cv2.imshow("test_img", cv2.imread("assets/testImage_batterien.jpg"))
 
-    test_img = cv2.imread("../assets/testImage_strand.jpg")
-    seg = ss.__segmentate(test_img, 2.0)
-
-    cv2.imshow("saliency1", ssc.color_segmentation(test_img, seg))
+    test_img = cv2.imread("../assets/testImage_auto.jpg")
+    seg = ss.__segmentate(test_img, 0.05)
+    cv2.imshow("seg0.05", ssc.color_segmentation(test_img, seg))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 

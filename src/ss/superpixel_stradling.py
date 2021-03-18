@@ -64,16 +64,14 @@ from utils.utils import get_n8
 def __segmentate(img: ndarray, theta_ss: float, use_bilateral_filter: bool = False) -> List[Set[Tuple[int, int]]]:
     scale_k = (img.shape[0] + img.shape[1]) * theta_ss
     result_map = felzenszwalb(img, scale=scale_k, sigma=1.5, min_size=5)
-    print(set(result_map.flatten()))
-    print(np.max(result_map))
     segmentation: List[Set[Tuple[int, int]]] = [set()] * (np.max(result_map) + 1)
     for idx in range(len(segmentation)):
         segmentation[idx] = set()
-    for i in tqdm(range(len(result_map))):
+
+    for i in range(len(result_map)):
         for j in range(len(result_map[0])):
             segmentation[result_map[i, j]].add((i, j))
-    for idx in range(len(segmentation)):
-        print("[{}]:\t{} / {}".format(idx, len(segmentation[idx]), img.shape[0] * img.shape[1]))
+
     return segmentation
 
 
