@@ -146,8 +146,7 @@ def process_proposal_group(image_id: int,
                            weights: Tuple[float, float, float, float, float],
                            theta_cc: float,
                            theta_ms: float,
-                           theta_ss: float,
-                           use_bilateral_filter: bool) -> List[dict]:
+                           theta_ss: float) -> List[dict]:
     area_min, area_max = minmax_of_mask_area(proposals)
 
     img = cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
@@ -169,7 +168,7 @@ def process_proposal_group(image_id: int,
         ms_foundation: MultiscaleSaliencyFoundation = ms.image_2_foundation(img)
         print("ms_foundation calculated!")
     if abs(weights[3]) > 0.0001:
-        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss, use_bilateral_filter)
+        ss_foundation: SuperpixelStradlingFoundation = ss.image_2_foundation(img, theta_ss)
         print("ss_foundation calculated!")
 
     def new_proposal(old_proposal: dict) -> Tuple[dict, float, float, float, float, float, float, float, float, float]:
@@ -249,20 +248,18 @@ def parallel_calc(proposals_path: str,
                   suffix: str,
                   theta_cc: float,
                   theta_ms: float,
-                  theta_ss: float,
-                  use_bilateral_filter: bool) -> None:
+                  theta_ss: float) -> None:
     open("../missingFiles.sh", "w").close()
     with open(proposals_path) as file:
         data = json.load(file)
     image_ids: Set[int] = set(map(lambda proposal: proposal['image_id'], data))
-    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float, float], float, float, float, bool]]
+    data_grouped: List[Tuple[int, List[dict], Tuple[float, float, float, float, float], float, float, float]]
     data_grouped = [(iid,
                      list(filter(lambda proposal: proposal['image_id'] == iid, data)),
                      weights,
                      theta_cc,
                      theta_ms,
-                     theta_ss,
-                     use_bilateral_filter)
+                     theta_ss)
                      for iid in image_ids][:images_nmax]
     for group in data_grouped:
         print("Searching for image Image COCO_val2014_{0}.jpg".format(str(group[0]).zfill(12)))
@@ -275,7 +272,7 @@ def parallel_calc(proposals_path: str,
         json.dump(new_data_grouped, file)
 
 
-def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
+def parse_args() -> Tuple[str, int, int, str, float, float, float]:
     parser = argparse.ArgumentParser(description="Objectnessscoring")
     parser.add_argument("-p", "--proposals", help="Path of file with proposals", required=True, default="")
     parser.add_argument("-n", "--nmax",
@@ -302,10 +299,6 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
                         help="Learned parameter for SS (0.0 < theta_ss < 2.0)",
                         required=False,
                         default="1.0")
-    parser.add_argument("-u", "--use_bilateral_filter",
-                        help="If set to TRUE, SS will use the bilateral filter",
-                        required=False,
-                        default="False")
 
     argument = parser.parse_args()
     assert (-1 <= int(argument.cue) <= 5)
@@ -319,12 +312,11 @@ def parse_args() -> Tuple[str, int, int, str, float, float, float, bool]:
            argument.suffixofoutput, \
            float(argument.theta_cc), \
            float(argument.theta_ms), \
-           float(argument.theta_ss), \
-           bool(argument.use_bilateral_filter)
+           float(argument.theta_ss)
 
 
 def main() -> None:
-    proposals_path, images_nmax, cue, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter = parse_args()
+    proposals_path, images_nmax, cue, suffix, theta_cc, theta_ms, theta_ss = parse_args()
     print("searching for max {0} proposal groups in {1}".format(images_nmax, proposals_path))
     weights = (0.25, 0.25, 0.25, 0.25, 0.0)
     if cue == 0:
@@ -339,7 +331,7 @@ def main() -> None:
         weights = (0.0, 0.0, 0.0, 0.0, 1.0)
     elif cue == 5:
         weights = (0.0, 0.0, 0.0, 0.0, 0.0)
-    parallel_calc(proposals_path, images_nmax, weights, suffix, theta_cc, theta_ms, theta_ss, use_bilateral_filter)
+    parallel_calc(proposals_path, images_nmax, weights, suffix, theta_cc, theta_ms, theta_ss)
     exit()
 
 
