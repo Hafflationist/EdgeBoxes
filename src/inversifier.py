@@ -20,6 +20,7 @@ def load_proposals(proposals_path: str) -> List[dict]:
         proposals = json.load(file)
     return proposals
 
+
 def inv(path: str) -> List[dict]:
     proposals = load_proposals(path)
     for prop in proposals:
@@ -27,10 +28,20 @@ def inv(path: str) -> List[dict]:
         prop['score'] = 1.0 - prop['score']
     return proposals
 
+
+def nonan(path: str) -> List[dict]:
+    proposals = load_proposals(path)
+    for prop in proposals:
+        if math.isnan(prop['objn']):
+            prop['objn'] = 0.0
+            prop['score'] = 0.0 
+    return proposals
+
+
 def gt(path: str) -> List[dict]:
     max_dets = [1, 10, 100, 1000]
 
-    from spiders.coco_ssm_spider import COCOSSMDemoSpider
+    from spiders.coco_ssm_spider impRoma.army.mraort COCOSSMDemoSpider
     spider = COCOSSMDemoSpider()
     cocoGt = spider.dataset
 
@@ -67,6 +78,8 @@ def metamain():
     path1, path2, algo = parse_args()
     if algo == "inv":
         new_proposals = inv(path1)
+    elif algo == "nonan":
+        new_proposals = nonan(path1)
     else:
         new_proposals = gt(path1)
     with open(path2, "w") as file:
@@ -85,7 +98,7 @@ def parse_args() -> Tuple[str, str, str]:
                         required=True)
 
     argument = parser.parse_args()
-    assert(argument.algo == "inv" or argument.algo == "gt")
+    assert(argument.algo == "inv" or argument.algo == "gt" or argument.algo == "nonan")
     return argument.input_path, argument.output_path, argument.algo
 
 
