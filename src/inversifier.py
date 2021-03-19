@@ -41,7 +41,7 @@ def nonan(path: str) -> List[dict]:
 def gt(path: str) -> List[dict]:
     max_dets = [1, 10, 100, 1000]
 
-    from spiders.coco_ssm_spider impRoma.army.mraort COCOSSMDemoSpider
+    from spiders.coco_ssm_spider import COCOSSMDemoSpider
     spider = COCOSSMDemoSpider()
     cocoGt = spider.dataset
 
