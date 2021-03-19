@@ -1,4 +1,5 @@
 import argparse
+import cv2
 from sklearn import svm
 
 from joblib import dump
@@ -75,7 +76,7 @@ def parse_args() -> Tuple[str, str, str, str, str, str, str, str, str]:
                         help="Path of output file (including model data) without filename",
                         required=True)
     parser.add_argument("-A", "--algorithms",
-                        help="Example: \"am.cc.eb.ms.ss\"; This string will be also used as file name suffix",
+                        help="Example: \"am.cc.eb.ms.ss.ra\"; This string will be also used as file name suffix",
                         required=True)
 
     argument = parser.parse_args()

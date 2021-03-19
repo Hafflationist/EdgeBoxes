@@ -32,6 +32,7 @@ def extract_algos(path: str):
          + ".eb." if ".eb" in path else ".__" \
          + ".ms." if ".ms" in path else ".__" \
          + ".ss." if ".ss" in path else ".__" \
+         + ".ra." if ".ra" in path else ".__" \
          + "."
 
 

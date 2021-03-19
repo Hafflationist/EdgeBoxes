@@ -1,10 +1,14 @@
 import argparse
 import json
+import cv2
 import copy
+import numpy as np
+from numpy.core.multiarray import ndarray
 import math
 from sklearn.svm import SVR
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
+from attentionmask.mask import decode
 
 from joblib import dump, load
 
@@ -20,6 +24,14 @@ def load_proposals(proposals_path: str) -> List[dict]:
 def extract_scores(proposals: List[dict]) -> List[float]:
     return list(map(lambda p: p['objn'], proposals))
 
+
+def segmentation_2_mask(seg) -> ndarray:
+    mask = decode(seg)
+    coords = np.where(mask == 1)
+    mask_coords = np.transpose(coords)
+    if len(coords[0]) == 0:
+        return np.array([(0, 0)])
+    return mask_coords
 
 
 def get_X_and_proposals(path_am: str,
@@ -76,6 +88,23 @@ def get_X_and_proposals(path_am: str,
             print("SS-scores contain NAN!")
         if any(math.isinf(s) for s in scores_ss):
             print("SS-scores contain INF!")
+
+    if "ra" in algorithms:  # dirty implicit conversion to true/false
+        images = {image_id : cv2.imread("/export2/scratch/8robohm/ba/val2014/COCO_val2014_" + str(image_id).zfill(12) + ".jpg")
+                    for image_id in set(map(lambda p: p['image_id'], proposals))}
+
+        def img_2_r(proposal, img) -> float:
+            return float(len(segmentation_2_mask(proposal['segmentation']))) / float(len(img) * len(img[0]))
+
+        def img_2_a(proposal) -> float:
+            return float(len(segmentation_2_mask(proposal['segmentation'])))
+
+        scores_r = [img_2_r(p, images[p['image_id']])
+                    for p in proposals]
+        scores_a = [img_2_a(p)
+                    for p in proposals]
+        scores_list.append(scores_r)
+        scores_list.append(scores_a)
 
     X: List[List[float]] = [list(i) for i in zip(*scores_list)]  # transposing list of lists
     return  X, proposals
