@@ -46,7 +46,7 @@ def train(path_gt: str,
                                        )
         trees.fit(X, y)
         dump(trees, model_output_path + "/trees.combi." + extract_algos(algorithms) + ".gurke")
-        print("Model written into " + model_output_path + "/trees.combi." + algorithms + ".gurke")
+        print("Model written into " + model_output_path + "/trees.combi." + extract_algos(algorithms) + ".gurke")
 
 
 def parse_args() -> Tuple[str, str, str, str, str, str, str, str, str]:
