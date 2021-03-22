@@ -28,7 +28,7 @@ def segmentation_2_mask(seg) -> ndarray:
 
 
 def extract_algos(path: str):
-    return "ra." if "ra" in path else "__" \
+    return "ra." if "ra." in path else "__" \
          + ".am." if ".am" in path else ".__" \
          + ".cc." if ".cc" in path else ".__" \
          + ".eb." if ".eb" in path else ".__" \
