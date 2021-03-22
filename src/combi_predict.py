@@ -8,7 +8,7 @@ from joblib import load
 
 from typing import Tuple, List, Callable
 
-from combi import get_X_and_proposals
+from combi import get_X_and_proposals, extract_algos
 
 
 def calc_regressand(proposals: List[dict],
@@ -24,16 +24,6 @@ def calc_regressand(proposals: List[dict],
         proposal['score'] = prediction
 
     return proposals_copy
-
-
-def extract_algos(path: str):
-    return "am." if "am" in path else "__" \
-         + ".cc." if ".cc" in path else ".__" \
-         + ".eb." if ".eb" in path else ".__" \
-         + ".ms." if ".ms" in path else ".__" \
-         + ".ss." if ".ss" in path else ".__" \
-         + ".ra." if ".ra" in path else ".__" \
-         + "."
 
 
 def predict(path_am: str,

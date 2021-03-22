@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from typing import Tuple, List, Optional, Dict
 
-from combi import get_X_and_proposals, load_proposals
+from combi import get_X_and_proposals, load_proposals, extract_algos
 
 
 def create_ordered_gt_results(proposals: List[dict], path_gt: Optional[str]) -> List[float]:
@@ -45,7 +45,7 @@ def train(path_gt: str,
                                        max_samples=None # could be reduced, default is 100%
                                        )
         trees.fit(X, y)
-        dump(trees, model_output_path + "/trees.combi." + algorithms + ".gurke")
+        dump(trees, model_output_path + "/trees.combi." + extract_algos(algorithms) + ".gurke")
         print("Model written into " + model_output_path + "/trees.combi." + algorithms + ".gurke")
 
 
