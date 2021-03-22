@@ -45,7 +45,7 @@ def train(path_gt: str,
                                        max_samples=None # could be reduced, default is 100%
                                        )
         trees.fit(X, y)
-        dump(trees, model_output_path + "/trees.combi." + algorithms + ".gurke", "w")
+        dump(trees, model_output_path + "/trees.combi." + algorithms + ".gurke")
         print("Model written into " + model_output_path + "/trees.combi." + algorithms + ".gurke")
 
 
