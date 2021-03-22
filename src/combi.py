@@ -28,13 +28,12 @@ def segmentation_2_mask(seg) -> ndarray:
 
 
 def extract_algos(path: str):
-    return "ra." if "ra." in path else "__" \
-         + ".am." if ".am" in path else ".__" \
-         + ".cc." if ".cc" in path else ".__" \
-         + ".eb." if ".eb" in path else ".__" \
-         + ".ms." if ".ms" in path else ".__" \
-         + ".ss." if ".ss" in path else ".__" \
-         + "."
+    return ("ra" if "ra." in path else "__") \
+         + (".am" if "am." in path else ".__") \
+         + (".cc" if "cc." in path else ".__") \
+         + (".eb" if "eb." in path else ".__") \
+         + (".ms" if "ms." in path else ".__") \
+         + (".ss" if ".ss" in path else ".__")
 
 
 def get_X_and_proposals(path_am: str,
