@@ -1,18 +1,11 @@
-import argparse
 import json
 import cv2
-import copy
 import numpy as np
 from numpy.core.multiarray import ndarray
 import math
-from sklearn.svm import SVR
-from sklearn import svm
-from sklearn.ensemble import RandomForestClassifier
 from attentionmask.mask import decode
 
-from joblib import dump, load
-
-from typing import Tuple, List, Optional, Dict, Any, Callable
+from typing import Tuple, List
 
 
 def load_proposals(proposals_path: str) -> List[dict]:

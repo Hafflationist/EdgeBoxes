@@ -2,7 +2,7 @@ import argparse
 import json
 import copy
 from sklearn.svm import SVR
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 
 from joblib import load
 
@@ -48,7 +48,7 @@ def predict(path_am: str,
 
     predictor = lambda _: -1.0
     if "trees.combi" in output_path:
-        trees: RandomForestClassifier = load(model_input_path)
+        trees: RandomForestRegressor = load(model_input_path)
         predictor = lambda data: trees.predict(data)[0]
     elif "svm.combi" in output_path:
         svr: SVR = load(model_input_path)

@@ -3,7 +3,7 @@ import cv2
 from sklearn import svm
 
 from joblib import dump
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 
 from typing import Tuple, List, Optional, Dict
 
@@ -37,7 +37,7 @@ def train(path_gt: str,
         print("Model written into " + model_output_path + "/svm.combi." + algorithms + ".gurke")
 
     if "trees" in learning_method:
-        trees = RandomForestClassifier(max_depth=10, # performance?
+        trees = RandomForestRegressor(max_depth=10, # performance?
                                        random_state=88, # determinism
                                        min_samples_leaf=1, # erhöhen für weichere Ergebnisse
                                        n_jobs=-1, # using all processors
