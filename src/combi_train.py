@@ -40,7 +40,7 @@ def train(path_gt: str,
         trees = RandomForestRegressor(max_depth=10, # performance?
                                        random_state=88, # determinism
                                        min_samples_leaf=1, # erhöhen für weichere Ergebnisse
-                                       n_jobs=2, # using 2 processors
+                                       n_jobs=8, # using 2 processors
                                        bootstrap=True,
                                        max_samples=None # could be reduced, default is 100%
                                        )
