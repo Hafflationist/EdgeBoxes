@@ -46,7 +46,7 @@ def predict(path_am: str,
 
     new_proposals = calc_regressand(proposals, X, predictor)
 
-    with open(output_path + "/attentionMask-8-128.json.combi." + algorithms + ".json", "w") as file:
+    with open(output_path + "/attentionMask-8-128.1000-2000.json.combi." + algorithms + ".json", "w") as file:
         json.dump(list(new_proposals), file)
     print("Prediction written into " + output_path + "/attentionMask-8-128.json.combi." + algorithms + ".json")
 
