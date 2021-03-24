@@ -37,10 +37,10 @@ def predict(path_am: str,
     X, proposals = get_X_and_proposals(path_am, path_cc, path_eb, path_ms,path_ss, algorithms)
 
     predictor = lambda _: -1.0
-    if "trees.combi" in output_path:
+    if "trees.combi" in model_input_path:
         trees: RandomForestRegressor = load(model_input_path)
         predictor = lambda data: trees.predict(data)[0]
-    elif "svm.combi" in output_path:
+    elif "svm.combi" in model_input_path:
         svr: SVR = load(model_input_path)
         predictor = lambda data: svr.predict(data)[0]
 

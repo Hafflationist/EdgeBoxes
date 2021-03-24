@@ -33,7 +33,7 @@ def train(path_gt: str,
     if "svm" in learning_method:
         svr = svm.SVR()
         svr.fit(X, y)
-        dump(svr, model_output_path + "/svm.combi." + algorithms + ".gurke", "w")
+        dump(svr, model_output_path + "/svm.combi." + algorithms + ".gurke")
         print("Model written into " + model_output_path + "/svm.combi." + algorithms + ".gurke")
 
     if "trees" in learning_method:
